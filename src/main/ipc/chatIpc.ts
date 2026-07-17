@@ -100,7 +100,14 @@ export function registerChatIpc(store: AssistantStore): void {
 
   ipcMain.on(IpcChannels.chatReset, (_event, rawPayload: unknown) => {
     const { assistantId } = ChatAbortSchema.parse(rawPayload)
-    activeRequests.get(assistantId)?.abort()
-    conversationCache.clear(assistantId)
+    resetConversation(assistantId)
   })
+}
+
+/** Abort any in-flight response and wipe the conversation. Used by the
+ *  overlay's New-chat button (via IPC) and by pressing an assistant's
+ *  shortcut again while its chat is already open. */
+export function resetConversation(assistantId: string): void {
+  activeRequests.get(assistantId)?.abort()
+  conversationCache.clear(assistantId)
 }

@@ -14,6 +14,7 @@ class OverlayWindowManager {
   private window: BrowserWindow | null = null
   private rendererReady = false
   private pendingPayload: OverlayConfigurePayload | null = null
+  private currentAssistantId: string | null = null
 
   // Created once at startup and reused for every assistant — cheaper than a
   // per-assistant window pool, and per-assistant chat state (added in M4)
@@ -72,10 +73,22 @@ class OverlayWindowManager {
     }
   }
 
+  /** True when the overlay is on screen showing this assistant's chat. */
+  isShowingAssistant(assistantId: string): boolean {
+    return (
+      !!this.window &&
+      !this.window.isDestroyed() &&
+      this.window.isVisible() &&
+      this.currentAssistantId === assistantId
+    )
+  }
+
   showFor(payload: OverlayConfigurePayload): void {
     if (!this.window || this.window.isDestroyed()) this.create()
     const win = this.window
     if (!win) return
+
+    this.currentAssistantId = payload.assistant?.id ?? null
 
     // Bottom-center of the monitor the cursor is currently on, a small
     // margin above the taskbar. The input box lives at the bottom of the

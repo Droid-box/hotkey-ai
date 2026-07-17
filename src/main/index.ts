@@ -6,7 +6,7 @@ import { registerAssistantsIpc } from './ipc/assistantsIpc'
 import { registerOverlayIpc } from './ipc/overlayIpc'
 import { registerShortcutsIpc } from './ipc/shortcutsIpc'
 import { registerSecretsIpc } from './ipc/secretsIpc'
-import { registerChatIpc } from './ipc/chatIpc'
+import { registerChatIpc, resetConversation } from './ipc/chatIpc'
 import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { assistantStore } from './store/assistantStore'
@@ -17,6 +17,13 @@ import { startDevServerWatchdog } from './lib/devServerWatchdog'
 function openAssistantOverlay(assistantId: string): void {
   const assistant = assistantStore.get(assistantId)
   if (!assistant) return
+
+  // Pressing the assistant's shortcut while its chat is already open acts
+  // as "start a new chat": abort any in-flight response, wipe history.
+  if (overlayWindowManager.isShowingAssistant(assistantId)) {
+    resetConversation(assistantId)
+  }
+
   overlayWindowManager.showFor({
     assistant: {
       id: assistant.id,
@@ -79,7 +86,15 @@ if (!gotSingleInstanceLock) {
     managementWindowManager.showOrCreate()
 
     const rendererUrl = process.env['ELECTRON_RENDERER_URL']
-    if (rendererUrl) startDevServerWatchdog(rendererUrl)
+    if (rendererUrl) {
+      startDevServerWatchdog(rendererUrl)
+      // Dev-only: lets headless verification (main-process inspector) drive
+      // the exact code path a global shortcut press takes.
+      ;(globalThis as Record<string, unknown>)['__hotkeyDebug'] = {
+        openAssistantOverlay,
+        conversationCache
+      }
+    }
   })
 
   // Hotkey AI is a tray-resident app: closing every window must not quit it.
