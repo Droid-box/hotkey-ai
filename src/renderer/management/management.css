@@ -453,6 +453,52 @@ select.input {
   color: var(--text-muted);
 }
 
+/* Shortcut recorder */
+
+.shortcut-recorder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shortcut-recorder-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.shortcut-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 11px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.shortcut-display:hover {
+  border-color: var(--text-muted);
+}
+
+.shortcut-recording {
+  border-style: solid;
+  border-color: var(--text-muted);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+.shortcut-placeholder {
+  color: var(--text-muted);
+}
+
 .error-text {
   margin: 0;
   font-size: 13px;

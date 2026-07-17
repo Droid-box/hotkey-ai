@@ -10,12 +10,17 @@ import type {
   ProviderId,
   ResizeEdge,
   ResizePhase,
+  ShortcutCheckResult,
   TestApiKeyResult
 } from './shared/types'
 
 const bridge: ManagementBridge = {
   appName: 'Hotkey AI',
   platform: process.platform,
+  shortcuts: {
+    checkConflict: (accelerator: string, excludeId?: string): Promise<ShortcutCheckResult> =>
+      ipcRenderer.invoke(IpcChannels.shortcutCheckConflict, accelerator, excludeId)
+  },
   assistants: {
     list: (): Promise<Assistant[]> => ipcRenderer.invoke(IpcChannels.assistantList),
     create: (input: AssistantInput): Promise<Assistant> =>

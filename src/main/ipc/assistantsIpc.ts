@@ -12,13 +12,18 @@ function broadcastAssistantsUpdated(): void {
   }
 }
 
-export function registerAssistantsIpc(store: AssistantStore): void {
+export function registerAssistantsIpc(store: AssistantStore, onChanged?: () => void): void {
+  const notifyChanged = (): void => {
+    onChanged?.()
+    broadcastAssistantsUpdated()
+  }
+
   ipcMain.handle(IpcChannels.assistantList, (): Assistant[] => store.list())
 
   ipcMain.handle(IpcChannels.assistantCreate, (_event, rawInput: unknown): Assistant => {
     const input = AssistantInputSchema.parse(rawInput)
     const created = store.create(input)
-    broadcastAssistantsUpdated()
+    notifyChanged()
     return created
   })
 
@@ -26,13 +31,13 @@ export function registerAssistantsIpc(store: AssistantStore): void {
     if (typeof id !== 'string') throw new Error('Assistant id must be a string')
     const input = AssistantInputSchema.parse(rawInput)
     const updated = store.update(id, input)
-    broadcastAssistantsUpdated()
+    notifyChanged()
     return updated
   })
 
   ipcMain.handle(IpcChannels.assistantDelete, (_event, id: unknown): void => {
     if (typeof id !== 'string') throw new Error('Assistant id must be a string')
     store.delete(id)
-    broadcastAssistantsUpdated()
+    notifyChanged()
   })
 }

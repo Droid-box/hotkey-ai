@@ -4,6 +4,7 @@ import { managementWindowManager } from './windows/managementWindow'
 import { overlayWindowManager } from './windows/overlayWindow'
 import { registerAssistantsIpc } from './ipc/assistantsIpc'
 import { registerOverlayIpc } from './ipc/overlayIpc'
+import { registerShortcutsIpc } from './ipc/shortcutsIpc'
 import { registerSecretsIpc } from './ipc/secretsIpc'
 import { registerChatIpc } from './ipc/chatIpc'
 import { registerModelsIpc } from './ipc/modelsIpc'
@@ -13,20 +14,31 @@ import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
 
-// Single app-wide shortcut until M5 adds per-assistant shortcut recording:
-// opens the first assistant in the store (or an empty state if none exist).
-const GLOBAL_SHORTCUT = { assistantId: 'primary', accelerator: 'CommandOrControl+Shift+H' }
-
-function openAssistantOverlay(): void {
-  const first = assistantStore.list()[0]
-  if (!first) {
-    overlayWindowManager.showFor({ assistant: null, history: [] })
-    return
-  }
+function openAssistantOverlay(assistantId: string): void {
+  const assistant = assistantStore.get(assistantId)
+  if (!assistant) return
   overlayWindowManager.showFor({
-    assistant: { id: first.id, name: first.name, provider: first.provider, model: first.model },
-    history: conversationCache.get(first.id)
+    assistant: {
+      id: assistant.id,
+      name: assistant.name,
+      provider: assistant.provider,
+      model: assistant.model
+    },
+    history: conversationCache.get(assistant.id)
   })
+}
+
+// Each assistant with a recorded shortcut gets its own global registration;
+// re-synced on startup and after every assistant create/update/delete.
+function shortcutEntries(): { assistantId: string; accelerator: string }[] {
+  return assistantStore
+    .list()
+    .filter((a) => a.shortcut)
+    .map((a) => ({ assistantId: a.id, accelerator: a.shortcut }))
+}
+
+function syncShortcuts(): void {
+  shortcutManager.registerAll(shortcutEntries(), openAssistantOverlay)
 }
 
 // WSLg's GPU passthrough is flaky (windows can render blank grey while the
@@ -51,16 +63,17 @@ if (!gotSingleInstanceLock) {
     // tray-resident utility, all actions live in its own UI.
     Menu.setApplicationMenu(null)
 
-    registerAssistantsIpc(assistantStore)
+    registerAssistantsIpc(assistantStore, syncShortcuts)
     registerOverlayIpc()
+    registerShortcutsIpc(assistantStore)
     registerSecretsIpc()
     registerChatIpc(assistantStore)
     registerModelsIpc()
     registerWindowControlsIpc()
 
     overlayWindowManager.create()
-    shortcutManager.registerAll([GLOBAL_SHORTCUT], openAssistantOverlay)
-    shortcutManager.watchPowerEvents(() => [GLOBAL_SHORTCUT])
+    syncShortcuts()
+    shortcutManager.watchPowerEvents(shortcutEntries)
 
     createTray()
     managementWindowManager.showOrCreate()

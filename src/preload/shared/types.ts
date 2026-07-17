@@ -39,10 +39,18 @@ export interface ModelListResult {
   error: string | null
 }
 
+export interface ShortcutCheckResult {
+  ok: boolean
+  reason: string | null
+}
+
 export interface ManagementBridge {
   appName: string
   /** Node's process.platform — lets the UI hide controls that misbehave under WSLg. */
   platform: string
+  shortcuts: {
+    checkConflict: (accelerator: string, excludeId?: string) => Promise<ShortcutCheckResult>
+  }
   assistants: {
     list: () => Promise<Assistant[]>
     create: (input: AssistantInput) => Promise<Assistant>

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Assistant, AssistantInput, ProviderId } from '../../preload/shared/types'
+import { ShortcutRecorder } from './ShortcutRecorder'
 
 interface Props {
   assistant?: Assistant
@@ -17,6 +18,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [systemPrompt, setSystemPrompt] = useState(assistant?.systemPrompt ?? '')
   const [provider, setProvider] = useState<ProviderId>(assistant?.provider ?? 'openai')
   const [model, setModel] = useState(assistant?.model ?? '')
+  const [shortcut, setShortcut] = useState(assistant?.shortcut ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,7 +57,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         systemPrompt,
         provider,
         model: model.trim(),
-        shortcut: assistant?.shortcut ?? ''
+        shortcut
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save assistant')
@@ -178,17 +180,12 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="assistant-shortcut">
-            Keyboard shortcut
-          </label>
-          <input
-            id="assistant-shortcut"
-            className="input"
-            value={assistant?.shortcut ?? ''}
-            disabled
-            placeholder="Coming soon"
-          />
-          <span className="hint">Shortcut recording is assigned in a later step.</span>
+          <span className="field-label">Keyboard shortcut</span>
+          <ShortcutRecorder value={shortcut} onChange={setShortcut} excludeId={assistant?.id} />
+          <span className="hint">
+            Summons this assistant from anywhere on your desktop, even while other apps are
+            focused.
+          </span>
         </div>
 
         {error && <p className="error-text">{error}</p>}
