@@ -27,8 +27,19 @@ function openAssistantOverlay(): void {
   })
 }
 
+// WSLg's GPU passthrough is flaky (windows can render blank grey while the
+// app paints fine internally). Software rendering is plenty for this UI;
+// Windows builds are unaffected.
+if (process.platform === 'linux') {
+  app.disableHardwareAcceleration()
+}
+
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
 if (!gotSingleInstanceLock) {
+  console.log(
+    'Hotkey AI is already running — this instance will exit. ' +
+      'Look for the existing tray icon/window, or stop the other `npm run dev` first.'
+  )
   app.quit()
 } else {
   app.on('second-instance', () => managementWindowManager.showOrCreate())
