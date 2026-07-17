@@ -1,0 +1,220 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.overlay {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 20px);
+  margin: 10px;
+  background: rgba(22, 22, 25, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  color: #f4f4f5;
+  overflow: hidden;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  /* Frameless window: the header doubles as the drag handle. */
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.overlay-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overlay-badge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11px;
+  color: #a1a1aa;
+  white-space: nowrap;
+}
+
+.overlay-close {
+  -webkit-app-region: no-drag;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.overlay-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f4f5;
+}
+
+.overlay-body {
+  flex: 1;
+  padding: 16px;
+  font-size: 13px;
+  color: #a1a1aa;
+  overflow-y: auto;
+}
+
+/* Chat */
+
+.chat-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.chat-empty {
+  margin: auto;
+  padding: 0 24px;
+  font-size: 13px;
+  color: #6b6b74;
+  text-align: center;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-user {
+  align-self: flex-end;
+  background: #3b3b41;
+  color: #f4f4f5;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e4e4e7;
+  border-bottom-left-radius: 4px;
+}
+
+.msg-error {
+  background: rgba(248, 113, 113, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.msg-pending {
+  color: #6b6b74;
+}
+
+.chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 14px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.chat-input {
+  flex: 1;
+  resize: none;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f4f5;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chat-input::placeholder {
+  color: #6b6b74;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.chat-send {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #e4e4e7;
+  color: #18181b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.chat-send:hover:not(:disabled) {
+  background: #d4d4d8;
+}
+
+.chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.overlay-footer {
+  padding: 8px 14px 12px;
+  font-size: 11px;
+  color: #6b6b74;
+  text-align: center;
+  user-select: none;
+}
+
+.overlay-footer .kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 10px;
+  color: #a1a1aa;
+}

@@ -1,0 +1,38 @@
+import { BrowserWindow, ipcMain } from 'electron'
+import { IpcChannels } from '../../preload/shared/ipcChannels'
+import type { Assistant } from '../../preload/shared/types'
+import { AssistantInputSchema } from '../store/schema'
+import type { AssistantStore } from '../store/assistantStore'
+
+// Broadcasts to every open window (management + overlay) so a currently-open
+// overlay can pick up an edited system prompt/model/provider without a restart.
+function broadcastAssistantsUpdated(): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(IpcChannels.assistantUpdated)
+  }
+}
+
+export function registerAssistantsIpc(store: AssistantStore): void {
+  ipcMain.handle(IpcChannels.assistantList, (): Assistant[] => store.list())
+
+  ipcMain.handle(IpcChannels.assistantCreate, (_event, rawInput: unknown): Assistant => {
+    const input = AssistantInputSchema.parse(rawInput)
+    const created = store.create(input)
+    broadcastAssistantsUpdated()
+    return created
+  })
+
+  ipcMain.handle(IpcChannels.assistantUpdate, (_event, id: unknown, rawInput: unknown): Assistant => {
+    if (typeof id !== 'string') throw new Error('Assistant id must be a string')
+    const input = AssistantInputSchema.parse(rawInput)
+    const updated = store.update(id, input)
+    broadcastAssistantsUpdated()
+    return updated
+  })
+
+  ipcMain.handle(IpcChannels.assistantDelete, (_event, id: unknown): void => {
+    if (typeof id !== 'string') throw new Error('Assistant id must be a string')
+    store.delete(id)
+    broadcastAssistantsUpdated()
+  })
+}

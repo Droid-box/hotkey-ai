@@ -1,0 +1,25 @@
+import { z } from 'zod'
+import type { Assistant, AssistantInput } from '../../preload/shared/types'
+
+export const ProviderIdSchema = z.enum(['openai', 'anthropic'])
+
+// Constrained against the shared Assistant type so this validator and the
+// renderer-facing type in preload/shared/types.ts can't silently drift.
+export const AssistantSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+  systemPrompt: z.string().max(20000),
+  provider: ProviderIdSchema,
+  model: z.string().min(1).max(200),
+  shortcut: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string()
+}) satisfies z.ZodType<Assistant>
+
+export const AssistantInputSchema = AssistantSchema.pick({
+  name: true,
+  systemPrompt: true,
+  provider: true,
+  model: true,
+  shortcut: true
+}) satisfies z.ZodType<AssistantInput>
