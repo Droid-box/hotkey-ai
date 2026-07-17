@@ -11,6 +11,7 @@ import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { assistantStore } from './store/assistantStore'
 import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
+import { startDevServerWatchdog } from './lib/devServerWatchdog'
 
 // Single app-wide shortcut until M5 adds per-assistant shortcut recording:
 // opens the first assistant in the store (or an empty state if none exist).
@@ -63,6 +64,9 @@ if (!gotSingleInstanceLock) {
 
     createTray()
     managementWindowManager.showOrCreate()
+
+    const rendererUrl = process.env['ELECTRON_RENDERER_URL']
+    if (rendererUrl) startDevServerWatchdog(rendererUrl)
   })
 
   // Hotkey AI is a tray-resident app: closing every window must not quit it.

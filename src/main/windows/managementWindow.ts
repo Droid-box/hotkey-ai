@@ -1,6 +1,14 @@
-import { BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
+
+// Once the app is actually quitting (tray Quit, dev-server watchdog, OS
+// shutdown), the hide-to-tray close handler must stand aside — a
+// preventDefault() there would otherwise veto app.quit() entirely.
+let appIsQuitting = false
+app.on('before-quit', () => {
+  appIsQuitting = true
+})
 
 class ManagementWindowManager {
   private window: BrowserWindow | null = null
@@ -43,7 +51,7 @@ class ManagementWindowManager {
     // Keep the app tray-resident: closing the window hides it instead of
     // destroying it, since Quit (from the tray) is the only real exit path.
     this.window.on('close', (event) => {
-      if (!this.window) return
+      if (!this.window || appIsQuitting) return
       event.preventDefault()
       this.window.hide()
     })
