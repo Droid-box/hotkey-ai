@@ -8,11 +8,14 @@ import type {
   ManagementBridge,
   ModelListResult,
   ProviderId,
+  ResizeEdge,
+  ResizePhase,
   TestApiKeyResult
 } from './shared/types'
 
 const bridge: ManagementBridge = {
   appName: 'Hotkey AI',
+  platform: process.platform,
   assistants: {
     list: (): Promise<Assistant[]> => ipcRenderer.invoke(IpcChannels.assistantList),
     create: (input: AssistantInput): Promise<Assistant> =>
@@ -40,6 +43,13 @@ const bridge: ManagementBridge = {
   models: {
     list: (provider: ProviderId): Promise<ModelListResult> =>
       ipcRenderer.invoke(IpcChannels.modelsList, provider)
+  },
+  windowControls: {
+    minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),
+    toggleMaximize: (): void => ipcRenderer.send(IpcChannels.windowToggleMaximize),
+    close: (): void => ipcRenderer.send(IpcChannels.windowClose),
+    resize: (edge: ResizeEdge, phase: ResizePhase, screenX: number, screenY: number): void =>
+      ipcRenderer.send(IpcChannels.windowResize, { edge, phase, screenX, screenY })
   }
 }
 

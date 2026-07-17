@@ -9,6 +9,11 @@ export const IpcChannels = {
 
   modelsList: 'models:list',
 
+  windowMinimize: 'window:minimize',
+  windowToggleMaximize: 'window:toggle-maximize',
+  windowClose: 'window:close',
+  windowResize: 'window:resize',
+
   secretsSetApiKey: 'secrets:set-api-key',
   secretsGetApiKeyStatus: 'secrets:get-api-key-status',
   secretsDeleteApiKey: 'secrets:delete-api-key',

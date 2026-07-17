@@ -18,6 +18,16 @@ class ManagementWindowManager {
       height: 640,
       show: false,
       title: 'Hotkey AI',
+      backgroundColor: '#131316',
+      // Custom title bar (TitleBar.tsx) replaces the OS chrome — the stock
+      // decorations clash with the app's dark theme.
+      frame: false,
+      hasShadow: false,
+      // Linux/WSLg: non-resizable keeps the X11 window exactly content-sized
+      // (a resizable frameless window carries an invisible grab-margin that
+      // WSLg renders as a visible band). Resize/maximize are reimplemented in
+      // windowControlsIpc + ResizeHandles. Windows keeps native behavior.
+      resizable: process.platform !== 'linux',
       webPreferences: {
         preload: join(__dirname, '../preload/management.js'),
         contextIsolation: true,

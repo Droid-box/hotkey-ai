@@ -41,6 +41,8 @@ export interface ModelListResult {
 
 export interface ManagementBridge {
   appName: string
+  /** Node's process.platform — lets the UI hide controls that misbehave under WSLg. */
+  platform: string
   assistants: {
     list: () => Promise<Assistant[]>
     create: (input: AssistantInput) => Promise<Assistant>
@@ -58,7 +60,16 @@ export interface ManagementBridge {
   models: {
     list: (provider: ProviderId) => Promise<ModelListResult>
   }
+  windowControls: {
+    minimize: () => void
+    toggleMaximize: () => void
+    close: () => void
+    resize: (edge: ResizeEdge, phase: ResizePhase, screenX: number, screenY: number) => void
+  }
 }
+
+export type ResizeEdge = 'left' | 'right' | 'bottom' | 'bottom-left' | 'bottom-right'
+export type ResizePhase = 'start' | 'move' | 'end'
 
 // The system prompt is deliberately excluded from what the overlay sees:
 // it never leaves the main process for display, only used when calling

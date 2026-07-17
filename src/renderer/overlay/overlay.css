@@ -12,14 +12,14 @@ body {
   overflow: hidden;
 }
 
-/* No border-radius: the opaque panel must cover every pixel of the
-   transparent window, otherwise the uncovered corners render as a
-   translucent sharp-cornered halo on some compositors (e.g. WSLg). */
+/* No border-radius: the panel must cover every pixel of the transparent
+   window, otherwise the uncovered corners render as a translucent
+   sharp-cornered halo on some compositors (e.g. WSLg). */
 .overlay {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #19191c;
+  background: rgba(22, 22, 25, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.09);
   color: #f4f4f5;
   overflow: hidden;

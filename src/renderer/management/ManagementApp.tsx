@@ -3,6 +3,8 @@ import type { Assistant, AssistantInput } from '../../preload/shared/types'
 import { AssistantListPage } from './AssistantListPage'
 import { AssistantEditPage } from './AssistantEditPage'
 import { ApiKeysPage } from './ApiKeysPage'
+import { TitleBar } from './TitleBar'
+import { ResizeHandles } from './ResizeHandles'
 
 type View = { type: 'list' } | { type: 'edit'; assistant?: Assistant } | { type: 'keys' }
 
@@ -34,6 +36,8 @@ export function ManagementApp() {
 
   return (
     <>
+      <TitleBar />
+      {window.hotkeyAI.platform === 'linux' && <ResizeHandles />}
       <nav className="tabs">
         <button
           className={`tab ${view.type !== 'keys' ? 'tab-active' : ''}`}
