@@ -20,7 +20,10 @@
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Emoji fonts listed explicitly so glyph fallback works on every
+     platform (Segoe UI Emoji on Windows, Noto Color Emoji on Linux). */
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   font-size: 14px;
   line-height: 1.5;
   background: var(--bg);
