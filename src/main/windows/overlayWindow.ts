@@ -77,19 +77,15 @@ class OverlayWindowManager {
     const win = this.window
     if (!win) return
 
-    // Horizontally centered, with the window's BOTTOM edge parked around mid
-    // screen — pushed down far enough that the window can grow to max height
-    // without leaving the screen. The input box lives at the bottom of the
-    // window, so growth happens upward: the input stays put while messages
-    // extend above it.
+    // Bottom-center of the monitor the cursor is currently on, a small
+    // margin above the taskbar. The input box lives at the bottom of the
+    // window and growth happens upward, so parking near the bottom keeps
+    // the input in easy reach and leaves maximum headroom for messages.
+    const BOTTOM_MARGIN = 24
     const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
-    const bottomOffset = Math.min(
-      Math.max(workArea.height * 0.5, OVERLAY_MAX_HEIGHT + 24),
-      Math.max(workArea.height - 24, OVERLAY_MIN_HEIGHT)
-    )
     win.setBounds({
       x: Math.round(workArea.x + (workArea.width - OVERLAY_WIDTH) / 2),
-      y: Math.round(workArea.y + bottomOffset) - OVERLAY_MIN_HEIGHT,
+      y: workArea.y + workArea.height - BOTTOM_MARGIN - OVERLAY_MIN_HEIGHT,
       width: OVERLAY_WIDTH,
       height: OVERLAY_MIN_HEIGHT
     })
