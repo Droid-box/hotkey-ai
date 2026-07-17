@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron'
+import { BrowserWindow, screen, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
@@ -49,6 +49,17 @@ class OverlayWindowManager {
     this.window.webContents.on('did-finish-load', () => {
       this.rendererReady = true
       if (this.pendingPayload) this.sendConfigure(this.pendingPayload)
+    })
+
+    // Markdown responses can contain links — open them in the default
+    // browser, never inside the overlay.
+    this.window.webContents.setWindowOpenHandler((details) => {
+      shell.openExternal(details.url)
+      return { action: 'deny' }
+    })
+    this.window.webContents.on('will-navigate', (event, url) => {
+      event.preventDefault()
+      shell.openExternal(url)
     })
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

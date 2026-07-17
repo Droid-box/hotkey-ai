@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { clipboard, contextBridge, ipcRenderer } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
   ChatStreamChunk,
@@ -26,6 +26,12 @@ const bridge: OverlayBridge = {
   },
   abort: (assistantId: string): void => {
     ipcRenderer.send(IpcChannels.chatAbort, { assistantId })
+  },
+  resetChat: (assistantId: string): void => {
+    ipcRenderer.send(IpcChannels.chatReset, { assistantId })
+  },
+  copyText: (text: string): void => {
+    clipboard.writeText(text)
   },
   onStreamChunk: subscribe<ChatStreamChunk>(IpcChannels.chatStreamChunk),
   onStreamEnd: subscribe<ChatStreamEnd>(IpcChannels.chatStreamEnd),

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import type { Assistant, AssistantInput, ProviderId } from '../../preload/shared/types'
 
 interface Props {
@@ -19,6 +19,28 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [model, setModel] = useState(assistant?.model ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [models, setModels] = useState<string[]>([])
+  const [modelsError, setModelsError] = useState<string | null>(null)
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [manualModel, setManualModel] = useState(false)
+
+  useEffect(() => {
+    let stale = false
+    setModelsLoading(true)
+    setModelsError(null)
+    window.hotkeyAI.models.list(provider).then((result) => {
+      if (stale) return
+      setModels(result.models)
+      setModelsError(result.error)
+      setModelsLoading(false)
+      // No list available -> manual entry is the only way in.
+      if (result.models.length === 0) setManualModel(true)
+    })
+    return () => {
+      stale = true
+    }
+  }, [provider])
 
   const isValid = name.trim().length > 0 && model.trim().length > 0
 
@@ -93,7 +115,11 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             id="assistant-provider"
             className="input"
             value={provider}
-            onChange={(e) => setProvider(e.target.value as ProviderId)}
+            onChange={(e) => {
+              setProvider(e.target.value as ProviderId)
+              setModel('')
+              setManualModel(false)
+            }}
           >
             {PROVIDER_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -104,16 +130,51 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="assistant-model">
-            Model
-          </label>
-          <input
-            id="assistant-model"
-            className="input"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder={provider === 'openai' ? 'gpt-5' : 'claude-sonnet-5'}
-          />
+          <div className="field-label-row">
+            <label className="field-label" htmlFor="assistant-model">
+              Model
+            </label>
+            {models.length > 0 && (
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => setManualModel(!manualModel)}
+              >
+                {manualModel ? 'Pick from list' : 'Enter manually'}
+              </button>
+            )}
+          </div>
+          {manualModel || models.length === 0 ? (
+            <input
+              id="assistant-model"
+              className="input"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={provider === 'openai' ? 'gpt-5' : 'claude-sonnet-5'}
+            />
+          ) : (
+            <select
+              id="assistant-model"
+              className="input"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+            >
+              <option value="" disabled>
+                {modelsLoading ? 'Loading models…' : 'Select a model'}
+              </option>
+              {/* Keep a saved model visible even if the provider no longer lists it. */}
+              {model && !models.includes(model) && (
+                <option value={model}>{model} (current)</option>
+              )}
+              {models.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+          )}
+          {modelsLoading && <span className="hint">Fetching available models…</span>}
+          {modelsError && <span className="hint">{modelsError}</span>}
         </div>
 
         <div className="field">

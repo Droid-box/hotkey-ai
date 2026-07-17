@@ -7,15 +7,20 @@ export const IpcChannels = {
 
   shortcutCheckConflict: 'shortcut:check-conflict',
 
+  modelsList: 'models:list',
+
   secretsSetApiKey: 'secrets:set-api-key',
   secretsGetApiKeyStatus: 'secrets:get-api-key-status',
   secretsDeleteApiKey: 'secrets:delete-api-key',
+  secretsTestApiKey: 'secrets:test-api-key',
+  secretsListApiKeys: 'secrets:list-api-keys',
 
   overlayConfigure: 'overlay:configure',
   overlayClose: 'overlay:close',
 
   chatSend: 'chat:send',
   chatAbort: 'chat:abort',
+  chatReset: 'chat:reset',
   chatStreamChunk: 'chat:stream-chunk',
   chatStreamEnd: 'chat:stream-end',
   chatStreamError: 'chat:stream-error'

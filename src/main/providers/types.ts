@@ -18,4 +18,8 @@ export interface SendMessageParams {
 export interface AIProvider {
   id: ProviderId
   sendMessage(params: SendMessageParams, callbacks: StreamCallbacks): Promise<void>
+  /** Cheap authenticated call (no tokens consumed); throws if the key is rejected. */
+  validateApiKey(apiKey: string): Promise<void>
+  /** Chat-capable model ids, newest first. Free API call; throws on failure. */
+  listModels(apiKey: string): Promise<string[]>
 }

@@ -1,9 +1,10 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
-import type { ApiKeyStatus } from '../../preload/shared/types'
+import type { ApiKeyInfo, ApiKeyStatus, TestApiKeyResult } from '../../preload/shared/types'
 import { ProviderIdSchema } from '../store/schema'
 import { secretsStore } from '../store/secretsStore'
+import { getProvider } from '../providers/registry'
 
 const ApiKeySchema = z.string().min(1).max(500)
 
@@ -23,4 +24,20 @@ export function registerSecretsIpc(): void {
     const provider = ProviderIdSchema.parse(rawProvider)
     secretsStore.deleteApiKey(provider)
   })
+
+  ipcMain.handle(
+    IpcChannels.secretsTestApiKey,
+    async (_event, rawProvider: unknown, rawKey: unknown): Promise<TestApiKeyResult> => {
+      const provider = ProviderIdSchema.parse(rawProvider)
+      const key = ApiKeySchema.parse(rawKey)
+      try {
+        await getProvider(provider).validateApiKey(key.trim())
+        return { ok: true }
+      } catch (err) {
+        return { ok: false, message: err instanceof Error ? err.message : String(err) }
+      }
+    }
+  )
+
+  ipcMain.handle(IpcChannels.secretsListApiKeys, (): ApiKeyInfo[] => secretsStore.listApiKeys())
 }

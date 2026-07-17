@@ -1,11 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
+  ApiKeyInfo,
   ApiKeyStatus,
   Assistant,
   AssistantInput,
   ManagementBridge,
-  ProviderId
+  ModelListResult,
+  ProviderId,
+  TestApiKeyResult
 } from './shared/types'
 
 const bridge: ManagementBridge = {
@@ -29,7 +32,14 @@ const bridge: ManagementBridge = {
     getApiKeyStatus: (provider: ProviderId): Promise<ApiKeyStatus> =>
       ipcRenderer.invoke(IpcChannels.secretsGetApiKeyStatus, provider),
     deleteApiKey: (provider: ProviderId): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.secretsDeleteApiKey, provider)
+      ipcRenderer.invoke(IpcChannels.secretsDeleteApiKey, provider),
+    testApiKey: (provider: ProviderId, key: string): Promise<TestApiKeyResult> =>
+      ipcRenderer.invoke(IpcChannels.secretsTestApiKey, provider, key),
+    listApiKeys: (): Promise<ApiKeyInfo[]> => ipcRenderer.invoke(IpcChannels.secretsListApiKeys)
+  },
+  models: {
+    list: (provider: ProviderId): Promise<ModelListResult> =>
+      ipcRenderer.invoke(IpcChannels.modelsList, provider)
   }
 }
 

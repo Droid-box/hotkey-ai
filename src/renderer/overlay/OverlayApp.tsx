@@ -1,8 +1,51 @@
 import { useEffect, useRef, useState } from 'react'
+import Markdown from 'react-markdown'
 import type { ChatMessage, OverlayConfigurePayload } from '../../preload/shared/types'
 
 interface DisplayMessage extends ChatMessage {
   error?: boolean
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy(): void {
+    window.hotkeyAI.copyText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  return (
+    <button
+      className={`msg-copy ${copied ? 'msg-copy-done' : ''}`}
+      onClick={handleCopy}
+      aria-label="Copy message"
+      title="Copy message"
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
+}
+
+function MessageBubble({ message, streaming }: { message: DisplayMessage; streaming: boolean }) {
+  const isUser = message.role === 'user'
+  return (
+    <div className={`msg-row ${isUser ? 'msg-row-user' : ''}`}>
+      <div
+        className={`msg ${isUser ? 'msg-user' : 'msg-assistant'} ${message.error ? 'msg-error' : ''}`}
+      >
+        {isUser || message.error ? (
+          message.content
+        ) : (
+          <div className="msg-markdown">
+            <Markdown>{message.content}</Markdown>
+            {streaming && <span className="cursor" />}
+          </div>
+        )}
+      </div>
+      {!streaming && !message.error && <CopyButton text={message.content} />}
+    </div>
+  )
 }
 
 export function OverlayApp() {
@@ -76,6 +119,14 @@ export function OverlayApp() {
     window.hotkeyAI.sendMessage(assistant.id, text)
   }
 
+  function newChat(): void {
+    if (!assistant) return
+    window.hotkeyAI.resetChat(assistant.id)
+    setMessages([])
+    setStreaming(false)
+    inputRef.current?.focus()
+  }
+
   return (
     <div className="overlay">
       <header className="overlay-header">
@@ -85,13 +136,20 @@ export function OverlayApp() {
             {assistant.provider}/{assistant.model}
           </span>
         )}
-        <button
-          className="overlay-close"
-          onClick={() => window.hotkeyAI.close()}
-          aria-label="Close overlay"
-        >
-          &times;
-        </button>
+        <div className="overlay-actions">
+          {assistant && messages.length > 0 && (
+            <button className="overlay-action" onClick={newChat} title="Start a new chat">
+              New chat
+            </button>
+          )}
+          <button
+            className="overlay-close"
+            onClick={() => window.hotkeyAI.close()}
+            aria-label="Close overlay"
+          >
+            &times;
+          </button>
+        </div>
       </header>
 
       {assistant ? (
@@ -99,22 +157,21 @@ export function OverlayApp() {
           <div className="chat-messages" ref={scrollRef}>
             {messages.length === 0 && (
               <p className="chat-empty">
-                Ask {assistant.name} anything — the conversation stays available until the
-                app restarts.
+                Ask {assistant.name} anything — the conversation stays available until you
+                start a new chat or the app restarts.
               </p>
             )}
             {messages.map((message, i) => (
-              <div
+              <MessageBubble
                 key={i}
-                className={`msg ${message.role === 'user' ? 'msg-user' : 'msg-assistant'} ${
-                  message.error ? 'msg-error' : ''
-                }`}
-              >
-                {message.content}
-              </div>
+                message={message}
+                streaming={streaming && i === messages.length - 1 && message.role === 'assistant'}
+              />
             ))}
             {streaming && messages[messages.length - 1]?.role === 'user' && (
-              <div className="msg msg-assistant msg-pending">…</div>
+              <div className="msg msg-assistant msg-pending">
+                <span className="cursor" />
+              </div>
             )}
           </div>
 

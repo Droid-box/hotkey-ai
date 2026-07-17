@@ -1,14 +1,17 @@
 import { safeStorage } from 'electron'
 import Store from 'electron-store'
-import type { ApiKeyStatus, ProviderId } from '../../preload/shared/types'
+import type { ApiKeyInfo, ApiKeyStatus, ProviderId } from '../../preload/shared/types'
 
 // Marks values stored without OS-level encryption (Linux dev sessions with
 // no keyring, e.g. WSL). On Windows, safeStorage always has DPAPI, so
 // shipped builds never take this path.
 const PLAINTEXT_PREFIX = 'insecure-plain:'
 
+// Older entries were bare encrypted strings; newer ones carry metadata.
+type StoredKey = string | { value: string; addedAt: string }
+
 interface SecretsShape {
-  keys: Partial<Record<ProviderId, string>>
+  keys: Partial<Record<ProviderId, StoredKey>>
 }
 
 const store = new Store<SecretsShape>({
@@ -39,20 +42,32 @@ function mask(key: string): string {
   return `${key.slice(0, 3)}…${key.slice(-4)}`
 }
 
+function normalize(stored: StoredKey): { value: string; addedAt: string | null } {
+  return typeof stored === 'string' ? { value: stored, addedAt: null } : stored
+}
+
 export const secretsStore = {
   setApiKey(provider: ProviderId, key: string): ApiKeyStatus {
-    store.set(`keys.${provider}`, encrypt(key))
+    store.set(`keys.${provider}`, { value: encrypt(key), addedAt: new Date().toISOString() })
     return { hasKey: true, masked: mask(key) }
   },
 
   getApiKey(provider: ProviderId): string | null {
     const stored = store.get('keys')[provider]
-    return stored ? decrypt(stored) : null
+    return stored ? decrypt(normalize(stored).value) : null
   },
 
   getApiKeyStatus(provider: ProviderId): ApiKeyStatus {
     const key = this.getApiKey(provider)
     return key ? { hasKey: true, masked: mask(key) } : { hasKey: false, masked: null }
+  },
+
+  listApiKeys(): ApiKeyInfo[] {
+    const keys = store.get('keys')
+    return (Object.keys(keys) as ProviderId[]).map((provider) => {
+      const { value, addedAt } = normalize(keys[provider]!)
+      return { provider, masked: mask(decrypt(value)), addedAt }
+    })
   },
 
   deleteApiKey(provider: ProviderId): void {

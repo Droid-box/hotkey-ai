@@ -296,6 +296,29 @@ body {
   font-weight: 500;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.link-button {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--text);
+}
+
 .input {
   width: 100%;
   padding: 8px 11px;
@@ -357,36 +380,31 @@ select.input {
   margin-top: 4px;
 }
 
-/* API keys */
+/* Modal */
 
-.key-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.key-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.key-row:last-child {
-  border-bottom: none;
-}
-
-.key-row-info {
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
-.key-row-form {
-  display: flex;
-  gap: 8px;
+.modal {
+  width: 440px;
+  max-width: calc(100vw - 48px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.key-row-form .input {
-  flex: 1;
+.modal-title {
+  margin: 0;
+  padding: 20px 24px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-form {
+  padding-top: 16px;
 }

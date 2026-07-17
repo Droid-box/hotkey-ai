@@ -97,4 +97,10 @@ export function registerChatIpc(store: AssistantStore): void {
     const { assistantId } = ChatAbortSchema.parse(rawPayload)
     activeRequests.get(assistantId)?.abort()
   })
+
+  ipcMain.on(IpcChannels.chatReset, (_event, rawPayload: unknown) => {
+    const { assistantId } = ChatAbortSchema.parse(rawPayload)
+    activeRequests.get(assistantId)?.abort()
+    conversationCache.clear(assistantId)
+  })
 }

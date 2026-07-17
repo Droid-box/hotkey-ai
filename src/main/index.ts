@@ -6,6 +6,7 @@ import { registerAssistantsIpc } from './ipc/assistantsIpc'
 import { registerOverlayIpc } from './ipc/overlayIpc'
 import { registerSecretsIpc } from './ipc/secretsIpc'
 import { registerChatIpc } from './ipc/chatIpc'
+import { registerModelsIpc } from './ipc/modelsIpc'
 import { assistantStore } from './store/assistantStore'
 import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
@@ -41,6 +42,7 @@ if (!gotSingleInstanceLock) {
     registerOverlayIpc()
     registerSecretsIpc()
     registerChatIpc(assistantStore)
+    registerModelsIpc()
 
     overlayWindowManager.create()
     shortcutManager.registerAll([GLOBAL_SHORTCUT], openAssistantOverlay)

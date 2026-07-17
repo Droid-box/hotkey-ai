@@ -15,12 +15,10 @@ body {
 .overlay {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 20px);
-  margin: 10px;
-  background: rgba(22, 22, 25, 0.94);
+  height: 100vh;
+  background: #19191c;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 14px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
   color: #f4f4f5;
   overflow: hidden;
 }
@@ -54,9 +52,34 @@ body {
   white-space: nowrap;
 }
 
-.overlay-close {
+.overlay-actions {
   -webkit-app-region: no-drag;
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overlay-action {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: transparent;
+  color: #a1a1aa;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.overlay-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
+}
+
+.overlay-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,25 +137,34 @@ body {
   text-align: center;
 }
 
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.msg-row-user {
+  align-items: flex-end;
+}
+
 .msg {
   max-width: 85%;
   padding: 8px 12px;
   border-radius: 12px;
   font-size: 13px;
   line-height: 1.55;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 
 .msg-user {
-  align-self: flex-end;
   background: #3b3b41;
   color: #f4f4f5;
   border-bottom-right-radius: 4px;
+  white-space: pre-wrap;
 }
 
 .msg-assistant {
-  align-self: flex-start;
   background: rgba(255, 255, 255, 0.06);
   color: #e4e4e7;
   border-bottom-left-radius: 4px;
@@ -142,10 +174,123 @@ body {
   background: rgba(248, 113, 113, 0.1);
   color: #fca5a5;
   border: 1px solid rgba(248, 113, 113, 0.25);
+  white-space: pre-wrap;
 }
 
 .msg-pending {
+  align-self: flex-start;
   color: #6b6b74;
+}
+
+.msg-copy {
+  opacity: 0;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: transparent;
+  color: #6b6b74;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.msg-row:hover .msg-copy {
+  opacity: 1;
+}
+
+.msg-copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
+}
+
+.msg-copy-done {
+  opacity: 1;
+  color: #86efac;
+}
+
+/* Markdown inside assistant messages */
+
+.msg-markdown > :first-child,
+.msg-markdown p:first-child {
+  margin-top: 0;
+}
+
+.msg-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.msg-markdown p,
+.msg-markdown ul,
+.msg-markdown ol,
+.msg-markdown pre,
+.msg-markdown blockquote {
+  margin: 8px 0;
+}
+
+.msg-markdown ul,
+.msg-markdown ol {
+  padding-left: 20px;
+}
+
+.msg-markdown li {
+  margin: 2px 0;
+}
+
+.msg-markdown h1,
+.msg-markdown h2,
+.msg-markdown h3,
+.msg-markdown h4 {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.msg-markdown code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+}
+
+.msg-markdown pre {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow-x: auto;
+}
+
+.msg-markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.msg-markdown a {
+  color: #93c5fd;
+}
+
+.msg-markdown blockquote {
+  padding-left: 10px;
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  color: #a1a1aa;
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #a1a1aa;
+  border-radius: 1px;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 .chat-input-row {

@@ -23,6 +23,22 @@ export interface ApiKeyStatus {
   masked: string | null
 }
 
+export interface ApiKeyInfo {
+  provider: ProviderId
+  masked: string
+  addedAt: string | null
+}
+
+export interface TestApiKeyResult {
+  ok: boolean
+  message?: string
+}
+
+export interface ModelListResult {
+  models: string[]
+  error: string | null
+}
+
 export interface ManagementBridge {
   appName: string
   assistants: {
@@ -36,6 +52,11 @@ export interface ManagementBridge {
     setApiKey: (provider: ProviderId, key: string) => Promise<ApiKeyStatus>
     getApiKeyStatus: (provider: ProviderId) => Promise<ApiKeyStatus>
     deleteApiKey: (provider: ProviderId) => Promise<void>
+    testApiKey: (provider: ProviderId, key: string) => Promise<TestApiKeyResult>
+    listApiKeys: () => Promise<ApiKeyInfo[]>
+  }
+  models: {
+    list: (provider: ProviderId) => Promise<ModelListResult>
   }
 }
 
@@ -72,6 +93,8 @@ export interface OverlayBridge {
   close: () => void
   sendMessage: (assistantId: string, message: string) => void
   abort: (assistantId: string) => void
+  resetChat: (assistantId: string) => void
+  copyText: (text: string) => void
   onStreamChunk: (callback: (payload: ChatStreamChunk) => void) => () => void
   onStreamEnd: (callback: (payload: ChatStreamEnd) => void) => () => void
   onStreamError: (callback: (payload: ChatStreamError) => void) => () => void

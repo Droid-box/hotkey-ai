@@ -2,10 +2,12 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ChatMessage } from '../../../src/preload/shared/types'
 
 const mockStream = vi.fn()
+const mockModelsList = vi.fn()
 
 vi.mock('@anthropic-ai/sdk', () => ({
   default: class {
     messages = { stream: mockStream }
+    models = { list: mockModelsList }
   }
 }))
 
@@ -99,6 +101,32 @@ describe('anthropicProvider', () => {
 
     expect(error).not.toBeNull()
     expect(error!.message).toContain('authentication_error')
+  })
+
+  it('listModels returns model ids in API order', async () => {
+    mockModelsList.mockReturnValue({
+      async *[Symbol.asyncIterator]() {
+        yield { id: 'claude-opus-4-8' }
+        yield { id: 'claude-sonnet-5' }
+        yield { id: 'claude-haiku-4-5' }
+      }
+    })
+
+    await expect(anthropicProvider.listModels('sk-ant-test')).resolves.toEqual([
+      'claude-opus-4-8',
+      'claude-sonnet-5',
+      'claude-haiku-4-5'
+    ])
+  })
+
+  it('validateApiKey resolves for an accepted key and rejects for a bad one', async () => {
+    mockModelsList.mockResolvedValueOnce({ data: [] })
+    await expect(anthropicProvider.validateApiKey('sk-ant-good')).resolves.toBeUndefined()
+
+    mockModelsList.mockRejectedValueOnce(new Error('401 authentication_error'))
+    await expect(anthropicProvider.validateApiKey('sk-ant-bad')).rejects.toThrow(
+      'authentication_error'
+    )
   })
 
   it('treats an abort as done-with-partial, not an error', async () => {
