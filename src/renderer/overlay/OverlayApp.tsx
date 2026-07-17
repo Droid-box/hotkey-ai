@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import type { ChatMessage, OverlayConfigurePayload } from '../../preload/shared/types'
 
@@ -20,9 +20,40 @@ function CopyButton({ text }: { text: string }) {
       className={`msg-copy ${copied ? 'msg-copy-done' : ''}`}
       onClick={handleCopy}
       aria-label="Copy message"
-      title="Copy message"
+      title={copied ? 'Copied' : 'Copy message'}
     >
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? (
+        <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
+          <path
+            d="M2.5 7.5 6 11l5.5-7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
+          <rect
+            x="5"
+            y="5"
+            width="7.5"
+            height="7.5"
+            rx="1.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+          />
+          <path
+            d="M9.5 2.75H3.75c-.55 0-1 .45-1 1V9.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
     </button>
   )
 }
@@ -58,6 +89,8 @@ export function OverlayApp() {
   const assistantIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+  const inputAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const unsubscribers = [
@@ -110,6 +143,27 @@ export function OverlayApp() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages])
 
+  // Single line by default; grow with content up to a cap, then scroll.
+  const MAX_INPUT_HEIGHT = 140
+  useLayoutEffect(() => {
+    const ta = inputRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${Math.min(ta.scrollHeight, MAX_INPUT_HEIGHT)}px`
+    ta.style.overflowY = ta.scrollHeight > MAX_INPUT_HEIGHT ? 'auto' : 'hidden'
+  }, [draft])
+
+  // Fit the window to its content: header + conversation + input. The main
+  // process clamps between compact (input-only) and max height, so the
+  // overlay opens small and grows with the conversation.
+  useLayoutEffect(() => {
+    const headerHeight = headerRef.current?.offsetHeight ?? 0
+    const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
+    const messagesHeight = messages.length > 0 ? (scrollRef.current?.scrollHeight ?? 0) : 0
+    const noAssistantHeight = assistant ? 0 : 80
+    window.hotkeyAI.resizeContent(headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2)
+  }, [assistant, messages, draft, streaming])
+
   function send(): void {
     const text = draft.trim()
     if (!text || streaming || !assistant) return
@@ -129,7 +183,7 @@ export function OverlayApp() {
 
   return (
     <div className="overlay">
-      <header className="overlay-header">
+      <header className="overlay-header" ref={headerRef}>
         <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
         {assistant && (
           <span className="overlay-badge">
@@ -138,8 +192,20 @@ export function OverlayApp() {
         )}
         <div className="overlay-actions">
           {assistant && messages.length > 0 && (
-            <button className="overlay-action" onClick={newChat} title="Start a new chat">
-              New chat
+            <button
+              className="overlay-action"
+              onClick={newChat}
+              aria-label="Start a new chat"
+              title="New chat"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                <path
+                  d="M7 1.5v11M1.5 7h11"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           )}
           <button
@@ -154,60 +220,73 @@ export function OverlayApp() {
 
       {assistant ? (
         <>
-          <div className="chat-messages" ref={scrollRef}>
-            {messages.length === 0 && (
-              <p className="chat-empty">
-                Ask {assistant.name} anything — the conversation stays available until you
-                start a new chat or the app restarts.
-              </p>
-            )}
-            {messages.map((message, i) => (
-              <MessageBubble
-                key={i}
-                message={message}
-                streaming={streaming && i === messages.length - 1 && message.role === 'assistant'}
-              />
-            ))}
-            {streaming && messages[messages.length - 1]?.role === 'user' && (
-              <div className="msg msg-assistant msg-pending">
-                <span className="cursor" />
-              </div>
-            )}
-          </div>
+          {messages.length > 0 && (
+            <div className="chat-messages" ref={scrollRef}>
+              {messages.map((message, i) => (
+                <MessageBubble
+                  key={i}
+                  message={message}
+                  streaming={
+                    streaming && i === messages.length - 1 && message.role === 'assistant'
+                  }
+                />
+              ))}
+              {streaming && messages[messages.length - 1]?.role === 'user' && (
+                <div className="msg msg-assistant msg-pending">
+                  <span className="cursor" />
+                </div>
+              )}
+            </div>
+          )}
 
-          <div className="chat-input-row">
-            <textarea
-              ref={inputRef}
-              className="chat-input"
-              value={draft}
-              rows={2}
-              placeholder={`Message ${assistant.name}…`}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  send()
-                }
-              }}
-            />
-            {streaming ? (
-              <button
-                className="chat-send"
-                onClick={() => assistant && window.hotkeyAI.abort(assistant.id)}
-                aria-label="Stop response"
-              >
-                Stop
-              </button>
-            ) : (
-              <button
-                className="chat-send"
-                onClick={send}
-                disabled={!draft.trim()}
-                aria-label="Send message"
-              >
-                Send
-              </button>
-            )}
+          <div className="chat-input-area" ref={inputAreaRef}>
+            <div className="chat-inputbox">
+              <textarea
+                ref={inputRef}
+                className="chat-input"
+                value={draft}
+                rows={1}
+                placeholder={`Message ${assistant.name}…`}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    send()
+                  }
+                }}
+              />
+              {streaming ? (
+                <button
+                  className="chat-send-icon"
+                  onClick={() => assistant && window.hotkeyAI.abort(assistant.id)}
+                  aria-label="Stop response"
+                  title="Stop"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                    <rect x="1" y="1" width="10" height="10" rx="2" fill="currentColor" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  className="chat-send-icon"
+                  onClick={send}
+                  disabled={!draft.trim()}
+                  aria-label="Send message"
+                  title="Send"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                    <path
+                      d="M8 13.5V2.5M8 2.5 3 7.5M8 2.5l5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </>
       ) : (
@@ -217,16 +296,6 @@ export function OverlayApp() {
             : 'Waiting for an assistant to be configured…'}
         </div>
       )}
-
-      <footer className="overlay-footer">
-        Press <span className="kbd">Esc</span> to dismiss
-        {assistant ? (
-          <>
-            {' · '}
-            <span className="kbd">Enter</span> to send
-          </>
-        ) : null}
-      </footer>
     </div>
   )
 }

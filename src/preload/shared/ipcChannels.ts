@@ -22,6 +22,7 @@ export const IpcChannels = {
 
   overlayConfigure: 'overlay:configure',
   overlayClose: 'overlay:close',
+  overlayResizeContent: 'overlay:resize-content',
 
   chatSend: 'chat:send',
   chatAbort: 'chat:abort',

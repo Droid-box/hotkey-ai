@@ -37,8 +37,9 @@ body {
 }
 
 .overlay-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 400;
+  color: #d4d4d8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -63,16 +64,16 @@ body {
 }
 
 .overlay-action {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
   border-radius: 8px;
-  padding: 4px 10px;
   background: transparent;
   color: #a1a1aa;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
   transition: background-color 0.15s, color 0.15s;
 }
 
@@ -131,14 +132,6 @@ body {
   border-radius: 4px;
 }
 
-.chat-empty {
-  margin: auto;
-  padding: 0 24px;
-  font-size: 13px;
-  color: #6b6b74;
-  text-align: center;
-}
-
 .msg-row {
   display: flex;
   flex-direction: column;
@@ -186,13 +179,16 @@ body {
 
 .msg-copy {
   opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border: none;
   border-radius: 6px;
-  padding: 2px 8px;
+  padding: 0;
   background: transparent;
   color: #6b6b74;
-  font: inherit;
-  font-size: 11px;
   cursor: pointer;
   transition: opacity 0.15s, background-color 0.15s, color 0.15s;
 }
@@ -295,18 +291,29 @@ body {
   }
 }
 
-.chat-input-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 10px 14px 4px;
+.chat-input-area {
+  padding: 10px 14px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
+/* Compact state (no messages yet): the input sits right under the header,
+   which already draws a separator — avoid a doubled line. */
+.overlay-header + .chat-input-area {
+  border-top: none;
+}
+
+.chat-inputbox {
+  position: relative;
+}
+
 .chat-input {
-  flex: 1;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   resize: none;
-  padding: 8px 11px;
+  overflow-y: hidden;
+  /* Room for the send icon pinned at the bottom-right corner. */
+  padding: 9px 44px 9px 11px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
@@ -325,43 +332,39 @@ body {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-.chat-send {
-  padding: 8px 14px;
+.chat-input::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-input::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.chat-send-icon {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #e4e4e7;
   color: #18181b;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, color 0.15s;
 }
 
-.chat-send:hover:not(:disabled) {
-  background: #d4d4d8;
+.chat-send-icon:hover:not(:disabled) {
+  background: #ffffff;
 }
 
-.chat-send:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.overlay-footer {
-  padding: 8px 14px 12px;
-  font-size: 11px;
+.chat-send-icon:disabled {
+  background: rgba(255, 255, 255, 0.07);
   color: #6b6b74;
-  text-align: center;
-  user-select: none;
+  cursor: default;
 }
 
-.overlay-footer .kbd {
-  display: inline-block;
-  padding: 1px 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.05);
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: 10px;
-  color: #a1a1aa;
-}

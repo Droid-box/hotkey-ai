@@ -5,7 +5,10 @@ import { IpcChannels } from '../../preload/shared/ipcChannels'
 import type { OverlayConfigurePayload } from '../../preload/shared/types'
 
 const OVERLAY_WIDTH = 420
-const OVERLAY_HEIGHT = 560
+// The window opens compact (header + input only) and grows with the
+// conversation, driven by renderer measurements, up to the max.
+const OVERLAY_MIN_HEIGHT = 110
+const OVERLAY_MAX_HEIGHT = 560
 
 class OverlayWindowManager {
   private window: BrowserWindow | null = null
@@ -20,7 +23,7 @@ class OverlayWindowManager {
 
     this.window = new BrowserWindow({
       width: OVERLAY_WIDTH,
-      height: OVERLAY_HEIGHT,
+      height: OVERLAY_MIN_HEIGHT,
       show: false,
       frame: false,
       transparent: true,
@@ -74,12 +77,21 @@ class OverlayWindowManager {
     const win = this.window
     if (!win) return
 
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+    // Horizontally centered, with the window's BOTTOM edge parked around mid
+    // screen — pushed down far enough that the window can grow to max height
+    // without leaving the screen. The input box lives at the bottom of the
+    // window, so growth happens upward: the input stays put while messages
+    // extend above it.
+    const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+    const bottomOffset = Math.min(
+      Math.max(workArea.height * 0.5, OVERLAY_MAX_HEIGHT + 24),
+      Math.max(workArea.height - 24, OVERLAY_MIN_HEIGHT)
+    )
     win.setBounds({
-      x: Math.round(display.workArea.x + (display.workArea.width - OVERLAY_WIDTH) / 2),
-      y: Math.round(display.workArea.y + (display.workArea.height - OVERLAY_HEIGHT) / 2),
+      x: Math.round(workArea.x + (workArea.width - OVERLAY_WIDTH) / 2),
+      y: Math.round(workArea.y + bottomOffset) - OVERLAY_MIN_HEIGHT,
       width: OVERLAY_WIDTH,
-      height: OVERLAY_HEIGHT
+      height: OVERLAY_MIN_HEIGHT
     })
 
     this.pendingPayload = payload
@@ -88,6 +100,25 @@ class OverlayWindowManager {
     win.show()
     win.focus()
     win.moveTop()
+  }
+
+  // Called by the renderer (via IPC) with its measured content height each
+  // time messages/input change. The bottom edge is the anchor: the window
+  // grows/shrinks upward so the input box never moves on screen. showFor
+  // already placed the bottom edge low enough for max growth, so no
+  // workArea clamp here (WSLg reports unreliable display metrics anyway).
+  resizeToContent(contentHeight: number): void {
+    const win = this.window
+    if (!win || win.isDestroyed()) return
+
+    const bounds = win.getBounds()
+    const bottomEdge = bounds.y + bounds.height
+    const height = Math.round(
+      Math.min(Math.max(contentHeight, OVERLAY_MIN_HEIGHT), OVERLAY_MAX_HEIGHT)
+    )
+    if (height !== bounds.height) {
+      win.setBounds({ x: bounds.x, y: bottomEdge - height, width: OVERLAY_WIDTH, height })
+    }
   }
 
   hide(): void {

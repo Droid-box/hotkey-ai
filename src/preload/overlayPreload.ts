@@ -21,6 +21,9 @@ const bridge: OverlayBridge = {
   close: (): void => {
     ipcRenderer.send(IpcChannels.overlayClose)
   },
+  resizeContent: (contentHeight: number): void => {
+    ipcRenderer.send(IpcChannels.overlayResizeContent, contentHeight)
+  },
   sendMessage: (assistantId: string, message: string): void => {
     ipcRenderer.send(IpcChannels.chatSend, { assistantId, message })
   },
