@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ChatWindowSize } from '../../preload/shared/types'
 
 const SIZE_OPTIONS: { value: ChatWindowSize; label: string }[] = [
@@ -18,6 +18,21 @@ const transparencyToOpacity = (pct: number): number => Number((1 - pct / 100).to
 export function SettingsPage() {
   const [size, setSize] = useState<ChatWindowSize | null>(null)
   const [opacity, setOpacity] = useState<number | null>(null)
+
+  // Match the transparency control's width to the size segmented control so
+  // their left/right edges line up. Measured (not hardcoded) so it stays exact
+  // regardless of platform font metrics.
+  const segmentedRef = useRef<HTMLDivElement>(null)
+  const [controlWidth, setControlWidth] = useState<number | undefined>(undefined)
+
+  useLayoutEffect(() => {
+    const measure = (): void => {
+      if (segmentedRef.current) setControlWidth(segmentedRef.current.offsetWidth)
+    }
+    measure()
+    // Web fonts can shift the segmented width after first paint; re-measure.
+    document.fonts?.ready.then(measure)
+  }, [])
 
   useEffect(() => {
     window.hotkeyAI.settings.get().then((s) => {
@@ -51,7 +66,12 @@ export function SettingsPage() {
       <div className="card settings-card">
         <div className="setting-row">
           <span className="field-label">Chat window size</span>
-          <div className="segmented" role="radiogroup" aria-label="Chat window size">
+          <div
+            className="segmented"
+            role="radiogroup"
+            aria-label="Chat window size"
+            ref={segmentedRef}
+          >
             {SIZE_OPTIONS.map((opt) => {
               const active = size === opt.value
               return (
@@ -72,7 +92,7 @@ export function SettingsPage() {
 
         <div className="setting-row">
           <span className="field-label">Chat window transparency</span>
-          <div className="slider-control">
+          <div className="slider-control" style={{ width: controlWidth }}>
             <input
               type="range"
               className="slider"
