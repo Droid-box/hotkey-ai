@@ -3,8 +3,10 @@ import { IpcChannels } from './shared/ipcChannels'
 import type {
   ApiKeyInfo,
   ApiKeyStatus,
+  AppSettings,
   Assistant,
   AssistantInput,
+  ChatWindowSize,
   ManagementBridge,
   ModelListResult,
   ProviderId,
@@ -48,6 +50,11 @@ const bridge: ManagementBridge = {
   models: {
     list: (provider: ProviderId): Promise<ModelListResult> =>
       ipcRenderer.invoke(IpcChannels.modelsList, provider)
+  },
+  settings: {
+    get: (): Promise<AppSettings> => ipcRenderer.invoke(IpcChannels.settingsGet),
+    setChatWindowSize: (size: ChatWindowSize): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowSize, size)
   },
   windowControls: {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),

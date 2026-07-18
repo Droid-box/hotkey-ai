@@ -3,6 +3,8 @@ import type { Assistant, AssistantInput } from '../../preload/shared/types'
 
 export const ProviderIdSchema = z.enum(['openai', 'anthropic'])
 
+export const ChatWindowSizeSchema = z.enum(['small', 'medium', 'large'])
+
 // Constrained against the shared Assistant type so this validator and the
 // renderer-facing type in preload/shared/types.ts can't silently drift.
 export const AssistantSchema = z.object({

@@ -3,10 +3,15 @@ import type { Assistant, AssistantInput } from '../../preload/shared/types'
 import { AssistantListPage } from './AssistantListPage'
 import { AssistantEditPage } from './AssistantEditPage'
 import { ApiKeysPage } from './ApiKeysPage'
+import { SettingsPage } from './SettingsPage'
 import { TitleBar } from './TitleBar'
 import { ResizeHandles } from './ResizeHandles'
 
-type View = { type: 'list' } | { type: 'edit'; assistant?: Assistant } | { type: 'keys' }
+type View =
+  | { type: 'list' }
+  | { type: 'edit'; assistant?: Assistant }
+  | { type: 'keys' }
+  | { type: 'settings' }
 
 export function ManagementApp() {
   const [assistants, setAssistants] = useState<Assistant[]>([])
@@ -46,7 +51,7 @@ export function ManagementApp() {
       <div className="app-body">
         <nav className="tabs">
           <button
-            className={`tab ${view.type !== 'keys' ? 'tab-active' : ''}`}
+            className={`tab ${view.type === 'list' || view.type === 'edit' ? 'tab-active' : ''}`}
             onClick={() => setView({ type: 'list' })}
           >
             Assistants
@@ -57,9 +62,17 @@ export function ManagementApp() {
           >
             API keys
           </button>
+          <button
+            className={`tab ${view.type === 'settings' ? 'tab-active' : ''}`}
+            onClick={() => setView({ type: 'settings' })}
+          >
+            Settings
+          </button>
         </nav>
 
-        {view.type === 'keys' ? (
+        {view.type === 'settings' ? (
+          <SettingsPage />
+        ) : view.type === 'keys' ? (
           <ApiKeysPage />
         ) : view.type === 'edit' ? (
           <AssistantEditPage

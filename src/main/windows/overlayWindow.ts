@@ -2,13 +2,21 @@ import { BrowserWindow, screen, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
-import type { OverlayConfigurePayload } from '../../preload/shared/types'
+import type { ChatWindowSize, OverlayConfigurePayload } from '../../preload/shared/types'
+import { getChatWindowSize } from '../store/settingsStore'
 
-const OVERLAY_WIDTH = 420
+// Chat window size presets (Settings → Chat Window Size). Width is fixed per
+// preset; the window still opens compact and grows with the conversation up
+// to the preset's max height. Small = the original size.
+const CHAT_WINDOW_DIMENSIONS: Record<ChatWindowSize, { width: number; maxHeight: number }> = {
+  small: { width: 420, maxHeight: 560 },
+  medium: { width: 520, maxHeight: 680 },
+  large: { width: 640, maxHeight: 820 }
+}
+
 // The window opens compact (header + input only) and grows with the
-// conversation, driven by renderer measurements, up to the max.
+// conversation, driven by renderer measurements, up to the preset max.
 const OVERLAY_MIN_HEIGHT = 110
-const OVERLAY_MAX_HEIGHT = 560
 const BOTTOM_MARGIN = 24
 
 // Open animation: the whole window slides up from a small offset below its
@@ -32,6 +40,16 @@ class OverlayWindowManager {
   private currentHeight = OVERLAY_MIN_HEIGHT
   private slideOffset = 0
   private openAnimTimer: ReturnType<typeof setInterval> | null = null
+  // Current size preset's dimensions, re-read from settings on each fresh
+  // summon so a change in Settings takes effect the next time the chat opens.
+  private overlayWidth = CHAT_WINDOW_DIMENSIONS.small.width
+  private maxHeight = CHAT_WINDOW_DIMENSIONS.small.maxHeight
+
+  private applyChatWindowSize(): void {
+    const dims = CHAT_WINDOW_DIMENSIONS[getChatWindowSize()]
+    this.overlayWidth = dims.width
+    this.maxHeight = dims.maxHeight
+  }
 
   // Created once at startup and reused for every assistant — cheaper than a
   // per-assistant window pool, and per-assistant chat state (added in M4)
@@ -39,8 +57,11 @@ class OverlayWindowManager {
   create(): void {
     if (this.window && !this.window.isDestroyed()) return
 
+    // Start from the persisted preset so the first summon is already sized.
+    this.applyChatWindowSize()
+
     this.window = new BrowserWindow({
-      width: OVERLAY_WIDTH,
+      width: this.overlayWidth,
       height: OVERLAY_MIN_HEIGHT,
       show: false,
       frame: false,
@@ -117,10 +138,12 @@ class OverlayWindowManager {
     // switch) keeps its current position and doesn't animate.
     const fresh = !win.isVisible()
     if (fresh) {
-      // Fresh summon: pin defaults off so click-away dismisses as usual.
+      // Fresh summon: pin defaults off so click-away dismisses as usual, and
+      // pick up any change to the chat window size preset.
       this.pinned = false
+      this.applyChatWindowSize()
       const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
-      this.overlayX = Math.round(workArea.x + (workArea.width - OVERLAY_WIDTH) / 2)
+      this.overlayX = Math.round(workArea.x + (workArea.width - this.overlayWidth) / 2)
       this.baseBottomEdge = workArea.y + workArea.height - BOTTOM_MARGIN
       this.currentHeight = OVERLAY_MIN_HEIGHT
       this.slideOffset = OPEN_SLIDE_PX
@@ -152,7 +175,7 @@ class OverlayWindowManager {
     win.setBounds({
       x: this.overlayX,
       y: Math.round(this.baseBottomEdge - this.currentHeight + this.slideOffset),
-      width: OVERLAY_WIDTH,
+      width: this.overlayWidth,
       height: this.currentHeight
     })
   }
@@ -191,7 +214,7 @@ class OverlayWindowManager {
     if (!win || win.isDestroyed()) return
 
     const target = Math.round(
-      Math.min(Math.max(contentHeight, OVERLAY_MIN_HEIGHT), OVERLAY_MAX_HEIGHT)
+      Math.min(Math.max(contentHeight, OVERLAY_MIN_HEIGHT), this.maxHeight)
     )
 
     // While the open animation runs, keep the shared height in sync and let
@@ -210,7 +233,7 @@ class OverlayWindowManager {
     this.baseBottomEdge = bottomEdge
     this.currentHeight = target
     if (target !== bounds.height) {
-      win.setBounds({ x: bounds.x, y: bottomEdge - target, width: OVERLAY_WIDTH, height: target })
+      win.setBounds({ x: bounds.x, y: bottomEdge - target, width: this.overlayWidth, height: target })
     }
   }
 

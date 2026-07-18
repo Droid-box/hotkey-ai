@@ -1,5 +1,12 @@
 export type ProviderId = 'openai' | 'anthropic'
 
+/** Chat overlay size preset (Settings → Chat Window Size). */
+export type ChatWindowSize = 'small' | 'medium' | 'large'
+
+export interface AppSettings {
+  chatWindowSize: ChatWindowSize
+}
+
 export interface Assistant {
   id: string
   name: string
@@ -67,6 +74,10 @@ export interface ManagementBridge {
   }
   models: {
     list: (provider: ProviderId) => Promise<ModelListResult>
+  }
+  settings: {
+    get: () => Promise<AppSettings>
+    setChatWindowSize: (size: ChatWindowSize) => Promise<void>
   }
   windowControls: {
     minimize: () => void

@@ -9,6 +9,9 @@ export const IpcChannels = {
 
   modelsList: 'models:list',
 
+  settingsGet: 'settings:get',
+  settingsSetChatWindowSize: 'settings:set-chat-window-size',
+
   windowMinimize: 'window:minimize',
   windowToggleMaximize: 'window:toggle-maximize',
   windowClose: 'window:close',
