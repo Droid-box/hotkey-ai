@@ -1,8 +1,17 @@
+import type { MouseEvent } from 'react'
+
 export function TitleBar() {
   const { windowControls } = window.hotkeyAI
 
+  // Double-clicking the draggable title bar toggles maximize/restore, like
+  // standard Windows title bars. Ignore double-clicks on the control buttons.
+  function onDoubleClick(e: MouseEvent<HTMLElement>): void {
+    if ((e.target as HTMLElement).closest('.titlebar-controls')) return
+    windowControls.toggleMaximize()
+  }
+
   return (
-    <header className="titlebar">
+    <header className="titlebar" onDoubleClick={onDoubleClick}>
       <span className="titlebar-title">Hotkey AI</span>
       <div className="titlebar-controls">
         <button

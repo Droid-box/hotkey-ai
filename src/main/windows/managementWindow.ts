@@ -2,6 +2,27 @@ import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
+import { loadManagementWindowState, saveManagementWindowState } from '../store/windowStateStore'
+
+// Persist window position/size across restarts (debounced). getNormalBounds
+// returns the restored (non-maximized) bounds even while maximized, so the
+// window comes back to its real windowed size next launch.
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+function persistWindowState(win: BrowserWindow): void {
+  if (win.isDestroyed()) return
+  const b = win.getNormalBounds()
+  saveManagementWindowState({
+    x: b.x,
+    y: b.y,
+    width: b.width,
+    height: b.height,
+    isMaximized: win.isMaximized()
+  })
+}
+function scheduleWindowStateSave(win: BrowserWindow): void {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => persistWindowState(win), 400)
+}
 
 // Restore a maximized window to its previous windowed size, repositioned so
 // the cursor sits at the same horizontal ratio along the title bar (and near
@@ -46,9 +67,12 @@ class ManagementWindowManager {
       return
     }
 
+    const state = loadManagementWindowState()
     this.window = new BrowserWindow({
-      width: 960,
-      height: 640,
+      width: state.width,
+      height: state.height,
+      x: state.x,
+      y: state.y,
       minWidth: MANAGEMENT_MIN_WIDTH,
       minHeight: MANAGEMENT_MIN_HEIGHT,
       show: false,
@@ -77,10 +101,18 @@ class ManagementWindowManager {
 
     this.window.on('ready-to-show', () => this.window?.show())
 
+    // Restore a maximized window (native platforms only; Linux uses manual
+    // maximize which stays windowed on launch).
+    if (state.isMaximized && process.platform !== 'linux') this.window.maximize()
+
     // Native maximize/unmaximize (Windows, OS shortcuts) → tell the renderer
     // so it can square the window corners while maximized. The Linux manual
     // maximize path emits this itself from windowControlsIpc.
     const win = this.window
+
+    // Persist size/position (debounced) as the user moves/resizes.
+    win.on('resize', () => scheduleWindowStateSave(win))
+    win.on('move', () => scheduleWindowStateSave(win))
     win.on('maximize', () => {
       // A frameless window keeps Chromium's own resize-border hit-testing
       // active even when maximized (unlike a framed window, where the OS
@@ -109,7 +141,10 @@ class ManagementWindowManager {
     // Keep the app tray-resident: closing the window hides it instead of
     // destroying it, since Quit (from the tray) is the only real exit path.
     this.window.on('close', (event) => {
-      if (!this.window || appIsQuitting) return
+      if (!this.window) return
+      // Persist the final position/size on both close-to-tray and real quit.
+      persistWindowState(this.window)
+      if (appIsQuitting) return
       event.preventDefault()
       this.window.hide()
     })
