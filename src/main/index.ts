@@ -14,6 +14,16 @@ import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
 
+// Under X11/WSLg, Electron falls back to the oversized black X11 core
+// cursors when no cursor theme is selected (XCURSOR_* unset), even though
+// our CSS only uses standard system cursors. Point it at an installed
+// theme at a normal size before the X connection opens. Linux-only; no
+// effect on Windows/macOS builds. Respect any value the user already set.
+if (process.platform === 'linux') {
+  process.env['XCURSOR_THEME'] ||= 'Adwaita'
+  process.env['XCURSOR_SIZE'] ||= '24'
+}
+
 function openAssistantOverlay(assistantId: string): void {
   const assistant = assistantStore.get(assistantId)
   if (!assistant) return
