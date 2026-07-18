@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { ChatWindowSize } from '../../preload/shared/types'
 
-const SIZE_OPTIONS: { value: ChatWindowSize; label: string; hint: string }[] = [
-  { value: 'small', label: 'Small', hint: 'Compact — the default size.' },
-  { value: 'medium', label: 'Medium', hint: 'Wider and taller.' },
-  { value: 'large', label: 'Large', hint: 'The most room for conversation.' }
+const SIZE_OPTIONS: { value: ChatWindowSize; label: string }[] = [
+  { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'large', label: 'Large' }
 ]
 
 export function SettingsPage() {
@@ -29,11 +29,8 @@ export function SettingsPage() {
 
       <div className="card settings-card">
         <div className="setting-row">
-          <div className="setting-label">
-            <span className="field-label">Chat window size</span>
-            <span className="hint">Applied the next time you open a chat.</span>
-          </div>
-          <div className="size-options" role="radiogroup" aria-label="Chat window size">
+          <span className="field-label">Chat window size</span>
+          <div className="segmented" role="radiogroup" aria-label="Chat window size">
             {SIZE_OPTIONS.map((opt) => {
               const active = size === opt.value
               return (
@@ -42,14 +39,10 @@ export function SettingsPage() {
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  className={`size-option ${active ? 'size-option-active' : ''}`}
+                  className={`segment ${active ? 'segment-active' : ''}`}
                   onClick={() => choose(opt.value)}
                 >
-                  <span className="size-option-preview" data-size={opt.value} aria-hidden="true">
-                    <span className="size-option-glyph" />
-                  </span>
-                  <span className="size-option-label">{opt.label}</span>
-                  <span className="size-option-hint">{opt.hint}</span>
+                  {opt.label}
                 </button>
               )
             })}
