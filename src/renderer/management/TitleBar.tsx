@@ -1,17 +1,27 @@
-import type { MouseEvent } from 'react'
+import { useEffect, useRef } from 'react'
 
 export function TitleBar() {
   const { windowControls } = window.hotkeyAI
+  const titleBarRef = useRef<HTMLElement>(null)
 
   // Double-clicking the draggable title bar toggles maximize/restore, like
-  // standard Windows title bars. Ignore double-clicks on the control buttons.
-  function onDoubleClick(e: MouseEvent<HTMLElement>): void {
-    if ((e.target as HTMLElement).closest('.titlebar-controls')) return
-    windowControls.toggleMaximize()
-  }
+  // standard Windows title bars. A native listener on the element (rather
+  // than React's delegated onDoubleClick) is used because -webkit-app-region:
+  // drag regions don't reliably surface synthetic events to React's root.
+  // Double-clicks on the control buttons are ignored.
+  useEffect(() => {
+    const el = titleBarRef.current
+    if (!el) return
+    const onDoubleClick = (e: globalThis.MouseEvent): void => {
+      if ((e.target as HTMLElement).closest('.titlebar-controls')) return
+      windowControls.toggleMaximize()
+    }
+    el.addEventListener('dblclick', onDoubleClick)
+    return () => el.removeEventListener('dblclick', onDoubleClick)
+  }, [windowControls])
 
   return (
-    <header className="titlebar" onDoubleClick={onDoubleClick}>
+    <header className="titlebar" ref={titleBarRef}>
       <span className="titlebar-title">Hotkey AI</span>
       <div className="titlebar-controls">
         <button
