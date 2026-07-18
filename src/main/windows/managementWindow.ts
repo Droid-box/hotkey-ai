@@ -1,7 +1,25 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
+
+// Restore a maximized window to its previous windowed size, repositioned so
+// the cursor sits at the same horizontal ratio along the title bar (and near
+// the top), so the in-progress native drag continues to follow the cursor.
+function restoreUnderCursor(win: BrowserWindow): void {
+  const maxBounds = win.getBounds()
+  const cursor = screen.getCursorScreenPoint()
+  const ratioX = maxBounds.width > 0 ? (cursor.x - maxBounds.x) / maxBounds.width : 0.5
+
+  win.unmaximize()
+  const restored = win.getBounds() // previous windowed size
+  win.setBounds({
+    x: Math.round(cursor.x - ratioX * restored.width),
+    y: maxBounds.y,
+    width: restored.width,
+    height: restored.height
+  })
+}
 
 // Minimum window size, shared by the native resize (BrowserWindow minWidth/
 // minHeight) and the custom WSLg resize handles (windowControlsIpc) so both
@@ -65,6 +83,17 @@ class ManagementWindowManager {
     const win = this.window
     win.on('maximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, true))
     win.on('unmaximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, false))
+
+    // Drag-to-unmaximize (Windows): dragging the title bar of a maximized
+    // window restores it under the cursor and lets the native drag continue,
+    // like standard Windows apps. `will-move` fires on the real OS move so
+    // this composes with FancyZones etc. (`will-move` is Windows/macOS only;
+    // the Linux manual-maximize path doesn't use it.)
+    win.on('will-move', (event) => {
+      if (!win.isMaximized()) return
+      event.preventDefault()
+      restoreUnderCursor(win)
+    })
 
     // Keep the app tray-resident: closing the window hides it instead of
     // destroying it, since Quit (from the tray) is the only real exit path.
