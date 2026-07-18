@@ -10,7 +10,8 @@ const sampleInput: AssistantInput = {
   systemPrompt: 'You are a helpful grammar editor.',
   provider: 'openai',
   model: 'gpt-5',
-  shortcut: ''
+  shortcut: '',
+  prefillClipboard: false
 }
 
 describe('assistantStore', () => {

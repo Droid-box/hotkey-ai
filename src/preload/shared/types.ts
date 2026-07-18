@@ -18,6 +18,8 @@ export interface Assistant {
   provider: ProviderId
   model: string
   shortcut: string
+  /** Pre-fill the overlay input with the clipboard contents when summoned. */
+  prefillClipboard: boolean
   createdAt: string
   updatedAt: string
 }
@@ -126,6 +128,8 @@ export interface OverlayConfigurePayload {
   pinned: boolean
   /** True when this is a fresh open (was hidden) — triggers the slide-up. */
   justOpened: boolean
+  /** Text to pre-fill the input with (clipboard contents), if enabled. */
+  prefill?: string
 }
 
 export interface ChatStreamChunk {

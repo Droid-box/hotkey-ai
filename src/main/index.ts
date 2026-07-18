@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, clipboard, Menu } from 'electron'
 import { IpcChannels } from '../preload/shared/ipcChannels'
 import { createTray } from './tray'
 import { managementWindowManager } from './windows/managementWindow'
@@ -45,7 +45,10 @@ function openAssistantOverlay(assistantId: string): void {
       provider: assistant.provider,
       model: assistant.model
     },
-    history: conversationCache.get(assistant.id)
+    history: conversationCache.get(assistant.id),
+    // Stage the clipboard in the input when the assistant opts in, so its
+    // hotkey acts on whatever the user just copied.
+    prefill: assistant.prefillClipboard ? clipboard.readText() : undefined
   })
 }
 

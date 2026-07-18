@@ -712,6 +712,19 @@ body.resizing * {
   justify-content: space-between;
 }
 
+.field-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.field-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .link-button {
   appearance: none;
   border: none;

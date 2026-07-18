@@ -148,11 +148,19 @@ export function OverlayApp() {
         assistantIdRef.current = payload.assistant?.id ?? null
         setMessages(payload.history)
         setStreaming(false)
-        setDraft('')
+        // Prefill with the clipboard when the assistant opts in; otherwise
+        // start empty.
+        setDraft(payload.prefill ?? '')
         setPinned(payload.pinned)
-        // Focus the input every time the overlay is summoned. (The slide-up
-        // open animation is driven entirely by the main process.)
-        requestAnimationFrame(() => inputRef.current?.focus())
+        // Focus the input every time the overlay is summoned (caret at the end
+        // of any prefilled text). The slide-up is driven by the main process.
+        requestAnimationFrame(() => {
+          const ta = inputRef.current
+          if (!ta) return
+          ta.focus()
+          const end = ta.value.length
+          ta.setSelectionRange(end, end)
+        })
       }),
       window.hotkeyAI.onStreamChunk(({ assistantId, delta }) => {
         if (assistantId !== assistantIdRef.current) return

@@ -19,6 +19,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [provider, setProvider] = useState<ProviderId>(assistant?.provider ?? 'openai')
   const [model, setModel] = useState(assistant?.model ?? '')
   const [shortcut, setShortcut] = useState(assistant?.shortcut ?? '')
+  const [prefillClipboard, setPrefillClipboard] = useState(assistant?.prefillClipboard ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,7 +58,8 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         systemPrompt,
         provider,
         model: model.trim(),
-        shortcut
+        shortcut,
+        prefillClipboard
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save assistant')
@@ -186,6 +188,28 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             Summons this assistant from anywhere on your desktop, even while other apps are
             focused.
           </span>
+        </div>
+
+        <div className="field">
+          <div className="field-toggle-row">
+            <div className="field-toggle-text">
+              <span className="field-label">Prefill with clipboard</span>
+              <span className="hint">
+                When summoned, start the message box with whatever you last copied — one keystroke
+                to act on your clipboard.
+              </span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={prefillClipboard}
+              aria-label="Prefill with clipboard"
+              className={`toggle ${prefillClipboard ? 'toggle-on' : ''}`}
+              onClick={() => setPrefillClipboard(!prefillClipboard)}
+            >
+              <span className="toggle-knob" />
+            </button>
+          </div>
         </div>
 
         {error && <p className="error-text">{error}</p>}

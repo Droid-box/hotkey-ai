@@ -18,6 +18,7 @@ export const AssistantSchema = z.object({
   provider: ProviderIdSchema,
   model: z.string().min(1).max(200),
   shortcut: z.string(),
+  prefillClipboard: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string()
 }) satisfies z.ZodType<Assistant>
@@ -27,5 +28,6 @@ export const AssistantInputSchema = AssistantSchema.pick({
   systemPrompt: true,
   provider: true,
   model: true,
-  shortcut: true
+  shortcut: true,
+  prefillClipboard: true
 }) satisfies z.ZodType<AssistantInput>
