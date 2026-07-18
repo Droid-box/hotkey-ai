@@ -38,7 +38,7 @@ export function ManagementApp() {
   }
 
   return (
-    <div className={`app-shell ${maximized ? 'app-shell-maximized' : ''}`}>
+    <div className="app-shell">
       <TitleBar />
       {/* No resize handles while maximized — matches native windows, and
           removes the resize cursors along with the drag behavior. */}

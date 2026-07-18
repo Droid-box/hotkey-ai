@@ -62,9 +62,7 @@ body {
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   font-size: 14px;
   line-height: 1.5;
-  /* Transparent so the rounded shell's corners clip against nothing (the
-     window itself is transparent — see managementWindow.ts). */
-  background: transparent;
+  background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -74,23 +72,15 @@ body {
   height: 100vh;
 }
 
-/* Rounded window shell: paints the app background, clips content to a 12px
-   radius matching the chat overlay. Title bar is fixed at the top; the body
-   scrolls beneath it. */
+/* Window shell: the window is opaque, so corners are rounded by the OS
+   (DWM on Windows 11) rather than CSS. The shell just fills the window and
+   clips its content; the title bar is fixed at the top, body scrolls below. */
 .app-shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
   overflow: hidden;
-}
-
-/* Maximized: square corners and no border to sit flush with screen edges. */
-.app-shell-maximized {
-  border-radius: 0;
-  border: none;
 }
 
 .app-body {
@@ -669,9 +659,6 @@ select.input {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.4);
-  /* Match the window's rounded corners so the backdrop doesn't paint
-     square corners into the transparent corner zone. */
-  border-radius: 12px;
   z-index: 100;
 }
 

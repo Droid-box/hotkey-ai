@@ -77,13 +77,14 @@ class ManagementWindowManager {
       minHeight: MANAGEMENT_MIN_HEIGHT,
       show: false,
       title: 'Hotkey AI',
-      // Transparent so the rounded .app-shell corners (management.css) show
-      // through, matching the chat overlay. Same rationale as overlayWindow.
-      transparent: true,
+      // Opaque (not transparent): transparent frameless windows on Windows
+      // lose native title-bar behaviors like double-click-to-maximize. On
+      // Windows 11 the OS (DWM) rounds an opaque frameless window's corners
+      // natively, so we don't need CSS transparency for that.
+      backgroundColor: '#131316',
       // Custom title bar (TitleBar.tsx) replaces the OS chrome — the stock
       // decorations clash with the app's dark theme.
       frame: false,
-      hasShadow: false,
       // Linux/WSLg: non-resizable keeps the X11 window exactly content-sized
       // (a resizable frameless window carries an invisible grab-margin that
       // WSLg renders as a visible band). Resize/maximize are reimplemented in
