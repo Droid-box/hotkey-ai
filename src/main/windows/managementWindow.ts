@@ -26,7 +26,9 @@ class ManagementWindowManager {
       height: 640,
       show: false,
       title: 'Hotkey AI',
-      backgroundColor: '#131316',
+      // Transparent so the rounded .app-shell corners (management.css) show
+      // through, matching the chat overlay. Same rationale as overlayWindow.
+      transparent: true,
       // Custom title bar (TitleBar.tsx) replaces the OS chrome — the stock
       // decorations clash with the app's dark theme.
       frame: false,

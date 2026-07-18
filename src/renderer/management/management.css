@@ -26,17 +26,40 @@ body {
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   font-size: 14px;
   line-height: 1.5;
-  background: var(--bg);
+  /* Transparent so the rounded shell's corners clip against nothing (the
+     window itself is transparent — see managementWindow.ts). */
+  background: transparent;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Rounded window shell: paints the app background, clips content to a 12px
+   radius matching the chat overlay. Title bar is fixed at the top; the body
+   scrolls beneath it. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.app-body {
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* Title bar (frameless window chrome) */
 
 .titlebar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   height: 36px;
@@ -277,6 +300,42 @@ body {
   background: var(--danger-bg);
 }
 
+.btn-danger-solid {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.btn-danger-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Icon buttons (compact, icon-only) */
+
+.icon-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.icon-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.icon-btn-danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
 /* Table */
 
 .table {
@@ -315,7 +374,9 @@ body {
 }
 
 .table .cell-actions {
-  text-align: right;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
   white-space: nowrap;
 }
 
@@ -524,6 +585,9 @@ select.input {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.4);
+  /* Match the window's rounded corners so the backdrop doesn't paint
+     square corners into the transparent corner zone. */
+  border-radius: 12px;
   z-index: 100;
 }
 
@@ -542,4 +606,25 @@ select.input {
 
 .modal-form {
   padding-top: 16px;
+}
+
+/* Confirmation dialog */
+
+.confirm-modal {
+  width: 400px;
+}
+
+.confirm-message {
+  margin: 0;
+  padding: 12px 24px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 20px 24px 24px;
 }

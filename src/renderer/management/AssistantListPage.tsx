@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import type { Assistant } from '../../preload/shared/types'
+import { ConfirmDialog } from './ConfirmDialog'
+import { EditIcon, TrashIcon } from './icons'
 
 interface Props {
   assistants: Assistant[]
@@ -13,6 +16,8 @@ const PROVIDER_LABELS: Record<string, string> = {
 }
 
 export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Props) {
+  const [pendingDelete, setPendingDelete] = useState<Assistant | null>(null)
+
   return (
     <div className="page">
       <header className="page-header">
@@ -23,7 +28,7 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
           </p>
         </div>
         <button className="btn btn-primary" onClick={onCreate}>
-          New assistant
+          Create
         </button>
       </header>
 
@@ -31,8 +36,8 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
         <div className="card empty">
           <p className="empty-title">No assistants yet</p>
           <p className="empty-hint">
-            Create your first assistant to get started. Global keyboard shortcuts can be
-            assigned once shortcut recording lands.
+            Create your first assistant to get started, then give it a global keyboard
+            shortcut to summon it from anywhere.
           </p>
         </div>
       ) : (
@@ -65,11 +70,21 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
                     )}
                   </td>
                   <td className="cell-actions">
-                    <button className="btn btn-ghost" onClick={() => onEdit(assistant)}>
-                      Edit
+                    <button
+                      className="icon-btn"
+                      onClick={() => onEdit(assistant)}
+                      aria-label={`Edit ${assistant.name}`}
+                      title="Edit"
+                    >
+                      <EditIcon />
                     </button>
-                    <button className="btn btn-danger" onClick={() => onDelete(assistant.id)}>
-                      Delete
+                    <button
+                      className="icon-btn icon-btn-danger"
+                      onClick={() => setPendingDelete(assistant)}
+                      aria-label={`Delete ${assistant.name}`}
+                      title="Delete"
+                    >
+                      <TrashIcon />
                     </button>
                   </td>
                 </tr>
@@ -77,6 +92,20 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
             </tbody>
           </table>
         </div>
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete assistant"
+          message={`Delete “${pendingDelete.name}”? This also releases its keyboard shortcut. This can't be undone.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={() => {
+            onDelete(pendingDelete.id)
+            setPendingDelete(null)
+          }}
+          onCancel={() => setPendingDelete(null)}
+        />
       )}
     </div>
   )

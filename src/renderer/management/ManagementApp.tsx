@@ -35,40 +35,42 @@ export function ManagementApp() {
   }
 
   return (
-    <>
+    <div className="app-shell">
       <TitleBar />
       {window.hotkeyAI.platform === 'linux' && <ResizeHandles />}
-      <nav className="tabs">
-        <button
-          className={`tab ${view.type !== 'keys' ? 'tab-active' : ''}`}
-          onClick={() => setView({ type: 'list' })}
-        >
-          Assistants
-        </button>
-        <button
-          className={`tab ${view.type === 'keys' ? 'tab-active' : ''}`}
-          onClick={() => setView({ type: 'keys' })}
-        >
-          API keys
-        </button>
-      </nav>
+      <div className="app-body">
+        <nav className="tabs">
+          <button
+            className={`tab ${view.type !== 'keys' ? 'tab-active' : ''}`}
+            onClick={() => setView({ type: 'list' })}
+          >
+            Assistants
+          </button>
+          <button
+            className={`tab ${view.type === 'keys' ? 'tab-active' : ''}`}
+            onClick={() => setView({ type: 'keys' })}
+          >
+            API keys
+          </button>
+        </nav>
 
-      {view.type === 'keys' ? (
-        <ApiKeysPage />
-      ) : view.type === 'edit' ? (
-        <AssistantEditPage
-          assistant={view.assistant}
-          onSave={handleSave}
-          onCancel={() => setView({ type: 'list' })}
-        />
-      ) : (
-        <AssistantListPage
-          assistants={assistants}
-          onCreate={() => setView({ type: 'edit' })}
-          onEdit={(assistant) => setView({ type: 'edit', assistant })}
-          onDelete={handleDelete}
-        />
-      )}
-    </>
+        {view.type === 'keys' ? (
+          <ApiKeysPage />
+        ) : view.type === 'edit' ? (
+          <AssistantEditPage
+            assistant={view.assistant}
+            onSave={handleSave}
+            onCancel={() => setView({ type: 'list' })}
+          />
+        ) : (
+          <AssistantListPage
+            assistants={assistants}
+            onCreate={() => setView({ type: 'edit' })}
+            onEdit={(assistant) => setView({ type: 'edit', assistant })}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
+    </div>
   )
 }

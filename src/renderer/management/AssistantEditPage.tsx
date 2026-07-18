@@ -195,7 +195,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" disabled={!isValid || saving}>
-            {saving ? 'Saving…' : assistant ? 'Save changes' : 'Create assistant'}
+            {saving ? 'Saving…' : assistant ? 'Save' : 'Create'}
           </button>
         </div>
       </form>

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { ApiKeyInfo, ProviderId } from '../../preload/shared/types'
+import { ConfirmDialog } from './ConfirmDialog'
+import { TrashIcon } from './icons'
 
 const PROVIDERS: { id: ProviderId; label: string; placeholder: string }[] = [
   { id: 'openai', label: 'OpenAI', placeholder: 'sk-…' },
@@ -148,6 +150,7 @@ function AddKeyModal({ existing, onSaved, onClose }: AddKeyModalProps) {
 export function ApiKeysPage() {
   const [keys, setKeys] = useState<ApiKeyInfo[]>([])
   const [adding, setAdding] = useState(false)
+  const [pendingRemove, setPendingRemove] = useState<ApiKeyInfo | null>(null)
 
   const refresh = useCallback(() => {
     window.hotkeyAI.secrets.listApiKeys().then(setKeys)
@@ -203,8 +206,13 @@ export function ApiKeysPage() {
                   </td>
                   <td className="text-muted">{formatDate(key.addedAt)}</td>
                   <td className="cell-actions">
-                    <button className="btn btn-danger" onClick={() => handleRemove(key.provider)}>
-                      Remove
+                    <button
+                      className="icon-btn icon-btn-danger"
+                      onClick={() => setPendingRemove(key)}
+                      aria-label={`Remove ${PROVIDER_LABELS[key.provider] ?? key.provider} key`}
+                      title="Remove"
+                    >
+                      <TrashIcon />
                     </button>
                   </td>
                 </tr>
@@ -222,6 +230,20 @@ export function ApiKeysPage() {
             setAdding(false)
             refresh()
           }}
+        />
+      )}
+
+      {pendingRemove && (
+        <ConfirmDialog
+          title="Remove API key"
+          message={`Remove the ${PROVIDER_LABELS[pendingRemove.provider] ?? pendingRemove.provider} API key? Assistants using this provider won't be able to respond until you add a new one.`}
+          confirmLabel="Remove"
+          destructive
+          onConfirm={() => {
+            handleRemove(pendingRemove.provider)
+            setPendingRemove(null)
+          }}
+          onCancel={() => setPendingRemove(null)}
         />
       )}
     </div>
