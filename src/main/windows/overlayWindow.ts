@@ -90,18 +90,25 @@ class OverlayWindowManager {
 
     this.currentAssistantId = payload.assistant?.id ?? null
 
-    // Bottom-center of the monitor the cursor is currently on, a small
-    // margin above the taskbar. The input box lives at the bottom of the
-    // window and growth happens upward, so parking near the bottom keeps
-    // the input in easy reach and leaves maximum headroom for messages.
-    const BOTTOM_MARGIN = 24
-    const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
-    win.setBounds({
-      x: Math.round(workArea.x + (workArea.width - OVERLAY_WIDTH) / 2),
-      y: workArea.y + workArea.height - BOTTOM_MARGIN - OVERLAY_MIN_HEIGHT,
-      width: OVERLAY_WIDTH,
-      height: OVERLAY_MIN_HEIGHT
-    })
+    // Place the window only on a fresh summon. While it's already on
+    // screen (e.g. same shortcut pressed again to start a new chat, or a
+    // switch to another assistant), keep the existing bottom anchor so the
+    // input box never moves — content changes just grow/collapse the top
+    // edge via resizeToContent.
+    if (!win.isVisible()) {
+      // Bottom-center of the monitor the cursor is currently on, a small
+      // margin above the taskbar. The input box lives at the bottom of the
+      // window and growth happens upward, so parking near the bottom keeps
+      // the input in easy reach and leaves maximum headroom for messages.
+      const BOTTOM_MARGIN = 24
+      const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+      win.setBounds({
+        x: Math.round(workArea.x + (workArea.width - OVERLAY_WIDTH) / 2),
+        y: workArea.y + workArea.height - BOTTOM_MARGIN - OVERLAY_MIN_HEIGHT,
+        width: OVERLAY_WIDTH,
+        height: OVERLAY_MIN_HEIGHT
+      })
+    }
 
     this.pendingPayload = payload
     if (this.rendererReady) this.sendConfigure(payload)
