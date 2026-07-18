@@ -22,7 +22,12 @@ export function TitleBar() {
 
   return (
     <header className="titlebar" ref={titleBarRef}>
-      <span className="titlebar-title">Hotkey AI</span>
+      <span className="titlebar-logo" role="img" aria-label="Hotkey AI">
+        <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1.5" y="1.5" width="29" height="29" rx="7" fill="#2c2c32" stroke="#3c3c44" strokeWidth="1" />
+          <path d="M19 3.5 9.5 17.5 15 17.5 13 28.5 23.5 13 17.5 13Z" fill="#f4f4f5" />
+        </svg>
+      </span>
       <div className="titlebar-controls">
         <button
           className="tb-btn"

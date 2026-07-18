@@ -102,11 +102,9 @@ body {
   user-select: none;
 }
 
-.titlebar-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
+.titlebar-logo {
+  display: flex;
+  align-items: center;
 }
 
 .titlebar-controls {
