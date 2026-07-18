@@ -51,6 +51,12 @@ body {
   overflow: hidden;
 }
 
+/* Maximized: square corners and no border to sit flush with screen edges. */
+.app-shell-maximized {
+  border-radius: 0;
+  border: none;
+}
+
 .app-body {
   flex: 1;
   overflow-y: auto;

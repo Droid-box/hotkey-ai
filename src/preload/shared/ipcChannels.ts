@@ -13,6 +13,7 @@ export const IpcChannels = {
   windowToggleMaximize: 'window:toggle-maximize',
   windowClose: 'window:close',
   windowResize: 'window:resize',
+  windowMaximizedChanged: 'window:maximized-changed',
 
   secretsSetApiKey: 'secrets:set-api-key',
   secretsGetApiKeyStatus: 'secrets:get-api-key-status',

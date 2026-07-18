@@ -11,6 +11,7 @@ type View = { type: 'list' } | { type: 'edit'; assistant?: Assistant } | { type:
 export function ManagementApp() {
   const [assistants, setAssistants] = useState<Assistant[]>([])
   const [view, setView] = useState<View>({ type: 'list' })
+  const [maximized, setMaximized] = useState(false)
 
   const refresh = useCallback(() => {
     window.hotkeyAI.assistants.list().then(setAssistants)
@@ -20,6 +21,8 @@ export function ManagementApp() {
     refresh()
     return window.hotkeyAI.assistants.onUpdated(refresh)
   }, [refresh])
+
+  useEffect(() => window.hotkeyAI.windowControls.onMaximizedChanged(setMaximized), [])
 
   async function handleSave(input: AssistantInput): Promise<void> {
     if (view.type === 'edit' && view.assistant) {
@@ -35,7 +38,7 @@ export function ManagementApp() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${maximized ? 'app-shell-maximized' : ''}`}>
       <TitleBar />
       {window.hotkeyAI.platform === 'linux' && <ResizeHandles />}
       <div className="app-body">

@@ -13,6 +13,15 @@ const useManualWindowOps = process.platform === 'linux'
 
 const savedBoundsForMaximize = new WeakMap<BrowserWindow, Rectangle>()
 
+function isMaximized(win: BrowserWindow): boolean {
+  return useManualWindowOps ? savedBoundsForMaximize.has(win) : win.isMaximized()
+}
+
+/** Push current maximized state to the renderer so it can square its corners. */
+export function emitMaximizedState(win: BrowserWindow): void {
+  win.webContents.send(IpcChannels.windowMaximizedChanged, isMaximized(win))
+}
+
 interface ResizeDrag {
   edge: 'left' | 'right' | 'bottom' | 'bottom-left' | 'bottom-right'
   startBounds: Rectangle
@@ -70,6 +79,10 @@ export function registerWindowControlsIpc(): void {
     if (!win) return
     if (useManualWindowOps) {
       manualToggleMaximize(win)
+      // Manual setBounds doesn't fire native maximize/unmaximize events, so
+      // notify the renderer explicitly. (Windows fires those events, handled
+      // by listeners attached in managementWindow.ts.)
+      emitMaximizedState(win)
     } else if (win.isMaximized()) {
       win.unmaximize()
     } else {

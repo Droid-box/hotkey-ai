@@ -73,6 +73,7 @@ export interface ManagementBridge {
     toggleMaximize: () => void
     close: () => void
     resize: (edge: ResizeEdge, phase: ResizePhase, screenX: number, screenY: number) => void
+    onMaximizedChanged: (callback: (maximized: boolean) => void) => () => void
   }
 }
 

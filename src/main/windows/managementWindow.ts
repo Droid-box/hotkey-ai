@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { is } from '../lib/env'
+import { IpcChannels } from '../../preload/shared/ipcChannels'
 
 // Once the app is actually quitting (tray Quit, dev-server watchdog, OS
 // shutdown), the hide-to-tray close handler must stand aside — a
@@ -49,6 +50,13 @@ class ManagementWindowManager {
     })
 
     this.window.on('ready-to-show', () => this.window?.show())
+
+    // Native maximize/unmaximize (Windows, OS shortcuts) → tell the renderer
+    // so it can square the window corners while maximized. The Linux manual
+    // maximize path emits this itself from windowControlsIpc.
+    const win = this.window
+    win.on('maximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, true))
+    win.on('unmaximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, false))
 
     // Keep the app tray-resident: closing the window hides it instead of
     // destroying it, since Quit (from the tray) is the only real exit path.
