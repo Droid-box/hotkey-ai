@@ -72,13 +72,22 @@ export interface ManagementBridge {
     minimize: () => void
     toggleMaximize: () => void
     close: () => void
-    resize: (edge: ResizeEdge, phase: ResizePhase, screenX: number, screenY: number) => void
+    /** Start/stop an edge drag; the main process tracks the cursor itself. */
+    resize: (edge: ResizeEdge, phase: ResizePhase) => void
     onMaximizedChanged: (callback: (maximized: boolean) => void) => () => void
   }
 }
 
-export type ResizeEdge = 'left' | 'right' | 'bottom' | 'bottom-left' | 'bottom-right'
-export type ResizePhase = 'start' | 'move' | 'end'
+export type ResizeEdge =
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+export type ResizePhase = 'start' | 'end'
 
 // The system prompt is deliberately excluded from what the overlay sees:
 // it never leaves the main process for display, only used when calling

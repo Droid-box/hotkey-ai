@@ -53,8 +53,8 @@ const bridge: ManagementBridge = {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),
     toggleMaximize: (): void => ipcRenderer.send(IpcChannels.windowToggleMaximize),
     close: (): void => ipcRenderer.send(IpcChannels.windowClose),
-    resize: (edge: ResizeEdge, phase: ResizePhase, screenX: number, screenY: number): void =>
-      ipcRenderer.send(IpcChannels.windowResize, { edge, phase, screenX, screenY }),
+    resize: (edge: ResizeEdge, phase: ResizePhase): void =>
+      ipcRenderer.send(IpcChannels.windowResize, { edge, phase }),
     onMaximizedChanged: (callback: (maximized: boolean) => void): (() => void) => {
       const listener = (_e: Electron.IpcRendererEvent, maximized: boolean): void =>
         callback(maximized)

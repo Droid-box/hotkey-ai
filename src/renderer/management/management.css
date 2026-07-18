@@ -120,46 +120,89 @@ body {
   position: fixed;
   z-index: 100;
   -webkit-app-region: no-drag;
+  /* Pointer events drive resize; block scroll/gesture interference. */
+  touch-action: none;
 }
 
+/* Top edge: thin strip along the very top between the corners. Sits above
+   the title bar; the drag region and control-button glyphs are below it. */
+.resize-top {
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+/* Side edges run between the top and bottom corners. */
 .resize-left {
   left: 0;
-  top: 36px;
-  bottom: 12px;
-  width: 5px;
+  top: 16px;
+  bottom: 16px;
+  width: 8px;
   cursor: ew-resize;
 }
 
 .resize-right {
   right: 0;
-  top: 36px;
-  bottom: 12px;
-  width: 5px;
+  top: 16px;
+  bottom: 16px;
+  width: 8px;
   cursor: ew-resize;
 }
 
 .resize-bottom {
-  left: 12px;
-  right: 12px;
+  left: 16px;
+  right: 16px;
   bottom: 0;
-  height: 5px;
+  height: 8px;
   cursor: ns-resize;
+}
+
+.resize-top-left {
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.resize-top-right {
+  right: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nesw-resize;
 }
 
 .resize-bottom-left {
   left: 0;
   bottom: 0;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   cursor: nesw-resize;
 }
 
 .resize-bottom-right {
   right: 0;
   bottom: 0;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   cursor: nwse-resize;
+}
+
+/* During an active resize: suppress text selection everywhere, keep the
+   resize cursor (set inline on body) consistent even over child elements,
+   and disable transitions so hover/color easing can't smear repaints while
+   the layout reflows every frame. */
+body.resizing,
+body.resizing * {
+  user-select: none !important;
+}
+
+body.resizing * {
+  cursor: inherit !important;
+  transition: none !important;
 }
 
 /* Tabs */
