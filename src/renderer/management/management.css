@@ -321,8 +321,13 @@ body.resizing * {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 34px;
-  padding: 14px 20px;
+  /* Fixed row height so every setting is the same height regardless of how
+     tall its control is (the segmented control is taller than the slider).
+     min-height is border-box here, and padding is kept small enough that the
+     tallest control still fits inside it, so both rows clamp to 60px with the
+     content vertically centered. */
+  min-height: 60px;
+  padding: 10px 20px;
 }
 
 .setting-row + .setting-row {
