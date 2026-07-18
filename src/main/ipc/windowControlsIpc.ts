@@ -2,6 +2,7 @@ import { BrowserWindow, ipcMain, screen, type Rectangle } from 'electron'
 import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import { MANAGEMENT_MIN_WIDTH, MANAGEMENT_MIN_HEIGHT } from '../windows/managementWindow'
+import { getNormalBounds, rememberNormalBounds } from '../windows/normalBounds'
 
 const MIN_WIDTH = MANAGEMENT_MIN_WIDTH
 const MIN_HEIGHT = MANAGEMENT_MIN_HEIGHT
@@ -157,7 +158,14 @@ export function registerWindowControlsIpc(): void {
       emitMaximizedState(win)
     } else if (win.isMaximized()) {
       win.unmaximize()
+      // The setResizable-on-maximize toggle can reset the OS restore bounds,
+      // so restore to the size/position we tracked ourselves.
+      const normal = getNormalBounds(win)
+      if (normal) win.setBounds(normal)
     } else {
+      // Remember the current windowed bounds before maximizing so restore
+      // returns here exactly.
+      rememberNormalBounds(win)
       win.maximize()
     }
   })

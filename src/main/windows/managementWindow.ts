@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import { loadManagementWindowState, saveManagementWindowState } from '../store/windowStateStore'
+import { getNormalBounds, rememberNormalBounds } from './normalBounds'
 
 // Persist window position/size across restarts (debounced). getNormalBounds
 // returns the restored (non-maximized) bounds even while maximized, so the
@@ -10,7 +11,7 @@ import { loadManagementWindowState, saveManagementWindowState } from '../store/w
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 function persistWindowState(win: BrowserWindow): void {
   if (win.isDestroyed()) return
-  const b = win.getNormalBounds()
+  const b = getNormalBounds(win) ?? win.getBounds()
   saveManagementWindowState({
     x: b.x,
     y: b.y,
@@ -33,12 +34,13 @@ function restoreUnderCursor(win: BrowserWindow): void {
   const ratioX = maxBounds.width > 0 ? (cursor.x - maxBounds.x) / maxBounds.width : 0.5
 
   win.unmaximize()
-  const restored = win.getBounds() // previous windowed size
+  // Previous windowed size (tracked ourselves; falls back to the OS restore).
+  const size = getNormalBounds(win) ?? win.getBounds()
   win.setBounds({
-    x: Math.round(cursor.x - ratioX * restored.width),
+    x: Math.round(cursor.x - ratioX * size.width),
     y: maxBounds.y,
-    width: restored.width,
-    height: restored.height
+    width: size.width,
+    height: size.height
   })
 }
 
@@ -102,6 +104,9 @@ class ManagementWindowManager {
 
     this.window.on('ready-to-show', () => this.window?.show())
 
+    // Capture the initial (windowed) bounds before any maximize below.
+    rememberNormalBounds(this.window)
+
     // Restore a maximized window (native platforms only; Linux uses manual
     // maximize which stays windowed on launch).
     if (state.isMaximized && process.platform !== 'linux') this.window.maximize()
@@ -111,9 +116,15 @@ class ManagementWindowManager {
     // maximize path emits this itself from windowControlsIpc.
     const win = this.window
 
-    // Persist size/position (debounced) as the user moves/resizes.
-    win.on('resize', () => scheduleWindowStateSave(win))
-    win.on('move', () => scheduleWindowStateSave(win))
+    // Track the last windowed bounds + persist (debounced) on move/resize.
+    win.on('resize', () => {
+      rememberNormalBounds(win)
+      scheduleWindowStateSave(win)
+    })
+    win.on('move', () => {
+      rememberNormalBounds(win)
+      scheduleWindowStateSave(win)
+    })
     win.on('maximize', () => {
       // A frameless window keeps Chromium's own resize-border hit-testing
       // active even when maximized (unlike a framed window, where the OS
