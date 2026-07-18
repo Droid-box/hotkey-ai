@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Assistant } from '../../preload/shared/types'
 import { ConfirmDialog } from './ConfirmDialog'
-import { EditIcon, TrashIcon } from './icons'
+import { EditIcon, PlusIcon, TrashIcon } from './icons'
 
 interface Props {
   assistants: Assistant[]
@@ -25,6 +25,7 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
           <h1 className="page-title">Assistants</h1>
         </div>
         <button className="btn btn-primary" onClick={onCreate}>
+          <PlusIcon />
           Create
         </button>
       </header>

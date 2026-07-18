@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { ApiKeyInfo, ProviderId } from '../../preload/shared/types'
 import { ConfirmDialog } from './ConfirmDialog'
-import { TrashIcon } from './icons'
+import { PlusIcon, TrashIcon } from './icons'
 
 const PROVIDERS: { id: ProviderId; label: string; placeholder: string }[] = [
   { id: 'openai', label: 'OpenAI', placeholder: 'sk-…' },
@@ -170,7 +170,8 @@ export function ApiKeysPage() {
           <h1 className="page-title">API keys</h1>
         </div>
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
-          Add API key
+          <PlusIcon />
+          Add Key
         </button>
       </header>
 

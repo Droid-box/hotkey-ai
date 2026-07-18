@@ -1,6 +1,21 @@
 // Small inline SVG icons for compact icon-only buttons. `currentColor`
 // lets each button's CSS drive the color.
 
+export function PlusIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M8 3.25v9.5M3.25 8h9.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function EditIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
