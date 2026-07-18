@@ -9,6 +9,7 @@ const OVERLAY_WIDTH = 420
 // conversation, driven by renderer measurements, up to the max.
 const OVERLAY_MIN_HEIGHT = 110
 const OVERLAY_MAX_HEIGHT = 560
+const RESIZE_ANIM_MS = 170
 
 class OverlayWindowManager {
   private window: BrowserWindow | null = null
@@ -16,6 +17,7 @@ class OverlayWindowManager {
   private pendingPayload: OverlayConfigurePayload | null = null
   private currentAssistantId: string | null = null
   private pinned = false
+  private resizeAnimTimer: ReturnType<typeof setInterval> | null = null
 
   // Created once at startup and reused for every assistant — cheaper than a
   // per-assistant window pool, and per-assistant chat state (added in M4)
@@ -86,21 +88,20 @@ class OverlayWindowManager {
     )
   }
 
-  // Caller supplies everything but `pinned`, which is owned here (reset on a
-  // fresh summon, toggled via setPinned).
-  showFor(payload: Omit<OverlayConfigurePayload, 'pinned'>): void {
+  // Caller supplies everything but `pinned`/`justOpened`, which are owned
+  // here (reset/derived on a fresh summon).
+  showFor(payload: Omit<OverlayConfigurePayload, 'pinned' | 'justOpened'>): void {
     if (!this.window || this.window.isDestroyed()) this.create()
     const win = this.window
     if (!win) return
 
     this.currentAssistantId = payload.assistant?.id ?? null
 
-    // Place the window only on a fresh summon. While it's already on
-    // screen (e.g. same shortcut pressed again to start a new chat, or a
-    // switch to another assistant), keep the existing bottom anchor so the
-    // input box never moves — content changes just grow/collapse the top
-    // edge via resizeToContent.
-    if (!win.isVisible()) {
+    // "Fresh" = the window was hidden. Only then do we (re)place it and play
+    // the slide-up open animation; a re-summon while already visible (new
+    // chat / assistant switch) keeps the bottom anchor and doesn't animate.
+    const fresh = !win.isVisible()
+    if (fresh) {
       // Fresh summon: pin defaults off so click-away dismisses as usual.
       this.pinned = false
       // Bottom-center of the monitor the cursor is currently on, a small
@@ -117,7 +118,7 @@ class OverlayWindowManager {
       })
     }
 
-    const resolved: OverlayConfigurePayload = { ...payload, pinned: this.pinned }
+    const resolved: OverlayConfigurePayload = { ...payload, pinned: this.pinned, justOpened: fresh }
     this.pendingPayload = resolved
     if (this.rendererReady) this.sendConfigure(resolved)
 
@@ -135,22 +136,58 @@ class OverlayWindowManager {
   // grows/shrinks upward so the input box never moves on screen. showFor
   // already placed the bottom edge low enough for max growth, so no
   // workArea clamp here (WSLg reports unreliable display metrics anyway).
-  resizeToContent(contentHeight: number): void {
+  // `animate` tweens the height (used when collapsing to compact on a new
+  // chat); everything else snaps instantly.
+  resizeToContent(contentHeight: number, animate = false): void {
     const win = this.window
     if (!win || win.isDestroyed()) return
 
+    // Any pending resize animation is superseded by a new measurement.
+    if (this.resizeAnimTimer) {
+      clearInterval(this.resizeAnimTimer)
+      this.resizeAnimTimer = null
+    }
+
     const bounds = win.getBounds()
     const bottomEdge = bounds.y + bounds.height
-    const height = Math.round(
+    const target = Math.round(
       Math.min(Math.max(contentHeight, OVERLAY_MIN_HEIGHT), OVERLAY_MAX_HEIGHT)
     )
-    if (height !== bounds.height) {
-      win.setBounds({ x: bounds.x, y: bottomEdge - height, width: OVERLAY_WIDTH, height })
+    if (target === bounds.height) return
+
+    const apply = (h: number): void =>
+      win.setBounds({ x: bounds.x, y: bottomEdge - h, width: OVERLAY_WIDTH, height: h })
+
+    if (!animate) {
+      apply(target)
+      return
     }
+
+    const from = bounds.height
+    const start = Date.now()
+    const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3)
+    this.resizeAnimTimer = setInterval(() => {
+      if (!this.window || this.window.isDestroyed()) {
+        if (this.resizeAnimTimer) clearInterval(this.resizeAnimTimer)
+        this.resizeAnimTimer = null
+        return
+      }
+      const t = Math.min(1, (Date.now() - start) / RESIZE_ANIM_MS)
+      apply(Math.round(from + (target - from) * easeOutCubic(t)))
+      if (t >= 1) {
+        if (this.resizeAnimTimer) clearInterval(this.resizeAnimTimer)
+        this.resizeAnimTimer = null
+        apply(target)
+      }
+    }, 16)
   }
 
   hide(): void {
     this.pinned = false
+    if (this.resizeAnimTimer) {
+      clearInterval(this.resizeAnimTimer)
+      this.resizeAnimTimer = null
+    }
     this.window?.hide()
   }
 

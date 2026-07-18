@@ -102,6 +102,8 @@ export interface OverlayConfigurePayload {
   history: ChatMessage[]
   /** Whether the overlay is currently pinned (won't auto-hide on blur). */
   pinned: boolean
+  /** True when this is a fresh open (was hidden) — triggers the slide-up. */
+  justOpened: boolean
 }
 
 export interface ChatStreamChunk {
@@ -122,8 +124,12 @@ export interface ChatStreamError {
 export interface OverlayBridge {
   onConfigure: (callback: (payload: OverlayConfigurePayload) => void) => () => void
   close: () => void
-  /** Ask the main process to fit the overlay window height to rendered content. */
-  resizeContent: (contentHeight: number) => void
+  /**
+   * Ask the main process to fit the overlay window height to rendered
+   * content. `animate` tweens the height (bottom edge fixed) — used when
+   * collapsing back to compact on a new chat.
+   */
+  resizeContent: (contentHeight: number, animate?: boolean) => void
   sendMessage: (assistantId: string, message: string) => void
   abort: (assistantId: string) => void
   resetChat: (assistantId: string) => void

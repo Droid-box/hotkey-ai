@@ -115,6 +115,10 @@ export function OverlayApp() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const inputAreaRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  // Set when the next content resize should animate (collapse to compact on
+  // a new chat) rather than snap instantly.
+  const animateShrinkRef = useRef(false)
 
   useEffect(() => {
     const unsubscribers = [
@@ -122,12 +126,30 @@ export function OverlayApp() {
         setConfigured(true)
         setAssistant(payload.assistant)
         assistantIdRef.current = payload.assistant?.id ?? null
+        // A reset while the overlay stays open (e.g. shortcut pressed again)
+        // arrives as an empty history without justOpened — collapse with the
+        // same animation the New chat button uses.
+        if (!payload.justOpened && payload.history.length === 0) {
+          animateShrinkRef.current = true
+        }
         setMessages(payload.history)
         setStreaming(false)
         setDraft('')
         setPinned(payload.pinned)
         // Focus the input every time the overlay is summoned.
         requestAnimationFrame(() => inputRef.current?.focus())
+        // On a fresh open, (re)start the slide-up animation. Deferred to the
+        // next frame so it plays after the window is actually shown, and the
+        // reflow forces the keyframes to restart even if the class is present.
+        if (payload.justOpened) {
+          requestAnimationFrame(() => {
+            const el = overlayRef.current
+            if (!el) return
+            el.classList.remove('overlay-open')
+            void el.offsetWidth
+            el.classList.add('overlay-open')
+          })
+        }
       }),
       window.hotkeyAI.onStreamChunk(({ assistantId, delta }) => {
         if (assistantId !== assistantIdRef.current) return
@@ -186,7 +208,12 @@ export function OverlayApp() {
     const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
     const messagesHeight = messages.length > 0 ? (scrollRef.current?.scrollHeight ?? 0) : 0
     const noAssistantHeight = assistant ? 0 : 80
-    window.hotkeyAI.resizeContent(headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2)
+    const animate = animateShrinkRef.current
+    animateShrinkRef.current = false
+    window.hotkeyAI.resizeContent(
+      headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2,
+      animate
+    )
   }, [assistant, messages, draft, streaming])
 
   function send(): void {
@@ -201,6 +228,7 @@ export function OverlayApp() {
   function newChat(): void {
     if (!assistant) return
     window.hotkeyAI.resetChat(assistant.id)
+    animateShrinkRef.current = true
     setMessages([])
     setStreaming(false)
     inputRef.current?.focus()
@@ -213,7 +241,7 @@ export function OverlayApp() {
   }
 
   return (
-    <div className="overlay">
+    <div className="overlay" ref={overlayRef}>
       <header className="overlay-header" ref={headerRef}>
         <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
         {assistant && (
@@ -260,6 +288,7 @@ export function OverlayApp() {
 
       {assistant ? (
         <>
+          {messages.length === 0 && <div className="chat-spacer" />}
           {messages.length > 0 && (
             <div className="chat-messages" ref={scrollRef}>
               {messages.map((message, i) => (

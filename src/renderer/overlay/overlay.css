@@ -62,6 +62,31 @@ body {
   overflow: hidden;
 }
 
+/* Slide-up + fade on a fresh open, so the window reads as emerging from
+   its bottom-centered spot. Applied via a class the renderer restarts on
+   each open (OverlayApp). */
+@keyframes overlay-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.overlay-open {
+  animation: overlay-slide-up 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-open {
+    animation: none;
+  }
+}
+
 .overlay-header {
   display: flex;
   align-items: center;
@@ -160,6 +185,14 @@ body {
 }
 
 /* Chat */
+
+/* Fills the gap between header and input while the window collapses to
+   compact on a new chat, keeping the input anchored to the bottom. At
+   compact size it is zero-height. */
+.chat-spacer {
+  flex: 1;
+  min-height: 0;
+}
 
 .chat-messages {
   flex: 1;
