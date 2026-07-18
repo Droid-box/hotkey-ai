@@ -100,6 +100,8 @@ export interface OverlayConfigurePayload {
     model: string
   } | null
   history: ChatMessage[]
+  /** Whether the overlay is currently pinned (won't auto-hide on blur). */
+  pinned: boolean
 }
 
 export interface ChatStreamChunk {
@@ -126,6 +128,8 @@ export interface OverlayBridge {
   abort: (assistantId: string) => void
   resetChat: (assistantId: string) => void
   copyText: (text: string) => void
+  /** Pin/unpin: a pinned overlay stays open when it loses focus. */
+  setPinned: (pinned: boolean) => void
   onStreamChunk: (callback: (payload: ChatStreamChunk) => void) => () => void
   onStreamEnd: (callback: (payload: ChatStreamEnd) => void) => () => void
   onStreamError: (callback: (payload: ChatStreamError) => void) => () => void

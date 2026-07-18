@@ -84,6 +84,17 @@ body {
   color: #f4f4f5;
 }
 
+/* Pinned: highlight so the pin state is obvious at a glance. */
+.overlay-action-active {
+  background: rgba(129, 140, 248, 0.22);
+  color: #c7d2fe;
+}
+
+.overlay-action-active:hover {
+  background: rgba(129, 140, 248, 0.3);
+  color: #e0e7ff;
+}
+
 .overlay-close {
   display: flex;
   align-items: center;

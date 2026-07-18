@@ -15,6 +15,7 @@ class OverlayWindowManager {
   private rendererReady = false
   private pendingPayload: OverlayConfigurePayload | null = null
   private currentAssistantId: string | null = null
+  private pinned = false
 
   // Created once at startup and reused for every assistant — cheaper than a
   // per-assistant window pool, and per-assistant chat state (added in M4)
@@ -47,6 +48,8 @@ class OverlayWindowManager {
 
     this.window.on('blur', () => {
       if (!this.window || this.window.webContents.isDevToolsOpened()) return
+      // A pinned overlay stays open when it loses focus (click-away).
+      if (this.pinned) return
       this.window.hide()
     })
 
@@ -83,7 +86,9 @@ class OverlayWindowManager {
     )
   }
 
-  showFor(payload: OverlayConfigurePayload): void {
+  // Caller supplies everything but `pinned`, which is owned here (reset on a
+  // fresh summon, toggled via setPinned).
+  showFor(payload: Omit<OverlayConfigurePayload, 'pinned'>): void {
     if (!this.window || this.window.isDestroyed()) this.create()
     const win = this.window
     if (!win) return
@@ -96,6 +101,8 @@ class OverlayWindowManager {
     // input box never moves — content changes just grow/collapse the top
     // edge via resizeToContent.
     if (!win.isVisible()) {
+      // Fresh summon: pin defaults off so click-away dismisses as usual.
+      this.pinned = false
       // Bottom-center of the monitor the cursor is currently on, a small
       // margin above the taskbar. The input box lives at the bottom of the
       // window and growth happens upward, so parking near the bottom keeps
@@ -110,12 +117,17 @@ class OverlayWindowManager {
       })
     }
 
-    this.pendingPayload = payload
-    if (this.rendererReady) this.sendConfigure(payload)
+    const resolved: OverlayConfigurePayload = { ...payload, pinned: this.pinned }
+    this.pendingPayload = resolved
+    if (this.rendererReady) this.sendConfigure(resolved)
 
     win.show()
     win.focus()
     win.moveTop()
+  }
+
+  setPinned(pinned: boolean): void {
+    this.pinned = pinned
   }
 
   // Called by the renderer (via IPC) with its measured content height each
@@ -138,6 +150,7 @@ class OverlayWindowManager {
   }
 
   hide(): void {
+    this.pinned = false
     this.window?.hide()
   }
 

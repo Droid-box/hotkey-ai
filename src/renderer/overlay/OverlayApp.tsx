@@ -6,6 +6,29 @@ interface DisplayMessage extends ChatMessage {
   error?: boolean
 }
 
+// Classic thumbtack: round head + shaft + needle point. Filled when pinned.
+function PinIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth={filled ? 1.4 : 1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 17v5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
 
@@ -85,6 +108,7 @@ export function OverlayApp() {
   const [messages, setMessages] = useState<DisplayMessage[]>([])
   const [draft, setDraft] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [pinned, setPinned] = useState(false)
 
   const assistantIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -101,6 +125,7 @@ export function OverlayApp() {
         setMessages(payload.history)
         setStreaming(false)
         setDraft('')
+        setPinned(payload.pinned)
         // Focus the input every time the overlay is summoned.
         requestAnimationFrame(() => inputRef.current?.focus())
       }),
@@ -181,6 +206,12 @@ export function OverlayApp() {
     inputRef.current?.focus()
   }
 
+  function togglePin(): void {
+    const next = !pinned
+    setPinned(next)
+    window.hotkeyAI.setPinned(next)
+  }
+
   return (
     <div className="overlay">
       <header className="overlay-header" ref={headerRef}>
@@ -208,6 +239,15 @@ export function OverlayApp() {
               </svg>
             </button>
           )}
+          <button
+            className={`overlay-action ${pinned ? 'overlay-action-active' : ''}`}
+            onClick={togglePin}
+            aria-label={pinned ? 'Unpin overlay' : 'Pin overlay'}
+            aria-pressed={pinned}
+            title={pinned ? 'Unpin (auto-hides on click away)' : 'Pin (stays open on click away)'}
+          >
+            <PinIcon filled={pinned} />
+          </button>
           <button
             className="overlay-close"
             onClick={() => window.hotkeyAI.close()}
