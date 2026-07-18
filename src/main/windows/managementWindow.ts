@@ -25,6 +25,14 @@ function scheduleWindowStateSave(win: BrowserWindow): void {
   saveTimer = setTimeout(() => persistWindowState(win), 400)
 }
 
+// Windows can un-maximize through several paths that never reach our IPC
+// handler — the native title-bar double-click and OS shortcuts (Win+Down)
+// among them. Restoring the tracked windowed bounds in the 'unmaximize' event
+// (below) makes every path land on the same size/position as the maximize
+// button. The drag-to-unmaximize path positions the window under the cursor
+// itself, so it opts out via this set to avoid being overridden.
+const skipUnmaximizeRestore = new WeakSet<BrowserWindow>()
+
 // Restore a maximized window to its previous windowed size, repositioned so
 // the cursor sits at the same horizontal ratio along the title bar (and near
 // the top), so the in-progress native drag continues to follow the cursor.
@@ -33,6 +41,7 @@ function restoreUnderCursor(win: BrowserWindow): void {
   const cursor = screen.getCursorScreenPoint()
   const ratioX = maxBounds.width > 0 ? (cursor.x - maxBounds.x) / maxBounds.width : 0.5
 
+  skipUnmaximizeRestore.add(win)
   win.unmaximize()
   // Previous windowed size (tracked ourselves; falls back to the OS restore).
   const size = getNormalBounds(win) ?? win.getBounds()
@@ -135,7 +144,16 @@ class ManagementWindowManager {
       win.webContents.send(IpcChannels.windowMaximizedChanged, true)
     })
     win.on('unmaximize', () => {
+      // Return to the previous windowed size/position for every un-maximize
+      // path (restore button, native title-bar double-click, OS shortcut) so
+      // they all match the maximize button. The drag path opts out (it has
+      // already positioned the window under the cursor). Read the target
+      // before setResizable, which can emit a 'resize' that re-records the
+      // (wrong, still-maximized) bounds into the normal-bounds map.
+      const skip = skipUnmaximizeRestore.delete(win)
+      const normal = skip ? undefined : getNormalBounds(win)
       if (process.platform !== 'linux') win.setResizable(true)
+      if (normal) win.setBounds(normal)
       win.webContents.send(IpcChannels.windowMaximizedChanged, false)
     })
 
