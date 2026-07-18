@@ -81,8 +81,19 @@ class ManagementWindowManager {
     // so it can square the window corners while maximized. The Linux manual
     // maximize path emits this itself from windowControlsIpc.
     const win = this.window
-    win.on('maximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, true))
-    win.on('unmaximize', () => win.webContents.send(IpcChannels.windowMaximizedChanged, false))
+    win.on('maximize', () => {
+      // A frameless window keeps Chromium's own resize-border hit-testing
+      // active even when maximized (unlike a framed window, where the OS
+      // disables it). Toggle resizable so a maximized window can't be edge-
+      // resized and shows no resize cursors. Linux uses manual maximize
+      // (these events don't fire there) and must stay non-resizable.
+      if (process.platform !== 'linux') win.setResizable(false)
+      win.webContents.send(IpcChannels.windowMaximizedChanged, true)
+    })
+    win.on('unmaximize', () => {
+      if (process.platform !== 'linux') win.setResizable(true)
+      win.webContents.send(IpcChannels.windowMaximizedChanged, false)
+    })
 
     // Drag-to-unmaximize (Windows): dragging the title bar of a maximized
     // window restores it under the cursor and lets the native drag continue,
