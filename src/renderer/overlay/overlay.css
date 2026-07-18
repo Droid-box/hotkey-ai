@@ -2,6 +2,17 @@
   box-sizing: border-box;
 }
 
+/* Same consistent gray focus ring as the management window, tuned for the
+   dark glass overlay. Keyboard-only via :focus-visible. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(228, 228, 231, 0.35);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 body {
   margin: 0;
   background: transparent;

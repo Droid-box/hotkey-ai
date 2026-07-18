@@ -18,6 +18,18 @@
   box-sizing: border-box;
 }
 
+/* One consistent gray focus ring for every control (matches the input
+   fields), replacing Chromium's default per-control outline. Keyboard-only
+   via :focus-visible; the ring follows each control's own border-radius. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 body {
   margin: 0;
   /* Emoji fonts listed explicitly so glyph fallback works on every
@@ -240,6 +252,11 @@ body.resizing * {
   box-shadow: inset 0 0 0 1px var(--border);
 }
 
+/* Preserve the active tab's inset border alongside the focus ring. */
+.tab-active:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--border), 0 0 0 3px var(--ring);
+}
+
 /* Layout */
 
 .page {
@@ -297,11 +314,6 @@ body.resizing * {
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 .btn:disabled {
@@ -536,7 +548,6 @@ body.resizing * {
 }
 
 .input:focus {
-  outline: none;
   border-color: var(--text-muted);
   box-shadow: 0 0 0 3px var(--ring);
 }
