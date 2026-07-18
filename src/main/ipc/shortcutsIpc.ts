@@ -8,11 +8,18 @@ import {
   validateAccelerator
 } from '../../preload/shared/accelerator'
 import type { AssistantStore } from '../store/assistantStore'
+import { shortcutManager } from '../shortcuts/shortcutManager'
 
 const AcceleratorSchema = z.string().min(1).max(60)
 const ExcludeIdSchema = z.string().optional()
 
 export function registerShortcutsIpc(store: AssistantStore): void {
+  // Initial state for a window opened after the last registration pass; live
+  // updates arrive via the shortcutFailuresChanged broadcast (see index.ts).
+  ipcMain.handle(IpcChannels.shortcutGetFailures, (): string[] =>
+    shortcutManager.getFailedAssistantIds()
+  )
+
   ipcMain.handle(
     IpcChannels.shortcutCheckConflict,
     (_event, rawAccelerator: unknown, rawExcludeId: unknown): ShortcutCheckResult => {

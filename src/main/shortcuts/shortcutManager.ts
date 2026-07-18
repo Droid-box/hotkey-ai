@@ -7,6 +7,7 @@ interface RegisteredShortcut {
 
 class ShortcutManager {
   private registered: RegisteredShortcut[] = []
+  private failed: RegisteredShortcut[] = []
   private onTrigger: ((assistantId: string) => void) | null = null
 
   // Re-registers everything on every call rather than diffing — this app
@@ -16,6 +17,7 @@ class ShortcutManager {
     this.onTrigger = onTrigger
     globalShortcut.unregisterAll()
     this.registered = []
+    this.failed = []
 
     for (const { assistantId, accelerator } of shortcuts) {
       if (!accelerator) continue
@@ -23,6 +25,7 @@ class ShortcutManager {
       if (ok) {
         this.registered.push({ assistantId, accelerator })
       } else {
+        this.failed.push({ assistantId, accelerator })
         console.warn(
           `Hotkey AI: could not register shortcut "${accelerator}" for assistant ${assistantId} — it may already be in use by another application.`
         )
@@ -30,9 +33,16 @@ class ShortcutManager {
     }
   }
 
+  /** Assistant ids whose accelerator the OS refused to register (usually
+   *  because another running app already owns that combination). */
+  getFailedAssistantIds(): string[] {
+    return this.failed.map((s) => s.assistantId)
+  }
+
   unregisterAll(): void {
     globalShortcut.unregisterAll()
     this.registered = []
+    this.failed = []
   }
 
   // Windows can silently drop global shortcut registrations across sleep/lock;

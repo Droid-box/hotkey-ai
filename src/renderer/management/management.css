@@ -436,6 +436,53 @@ body.resizing * {
   color: var(--text-muted);
 }
 
+/* Toggle switch (custom, matches the segmented/slider controls) */
+.toggle {
+  appearance: none;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+.toggle-on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle-on .toggle-knob {
+  background: var(--accent-fg);
+  transform: translateX(16px);
+}
+
 /* Buttons */
 
 .btn {
@@ -601,6 +648,19 @@ body.resizing * {
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 12px;
   color: var(--text);
+}
+
+.kbd-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.shortcut-warning {
+  display: inline-flex;
+  align-items: center;
+  color: var(--danger);
+  cursor: help;
 }
 
 .text-muted {

@@ -17,6 +17,7 @@ export function ManagementApp() {
   const [assistants, setAssistants] = useState<Assistant[]>([])
   const [view, setView] = useState<View>({ type: 'list' })
   const [maximized, setMaximized] = useState(false)
+  const [shortcutFailures, setShortcutFailures] = useState<string[]>([])
 
   const refresh = useCallback(() => {
     window.hotkeyAI.assistants.list().then(setAssistants)
@@ -28,6 +29,23 @@ export function ManagementApp() {
   }, [refresh])
 
   useEffect(() => window.hotkeyAI.windowControls.onMaximizedChanged(setMaximized), [])
+
+  // Track which assistants' shortcuts the OS refused, so the list can flag them.
+  useEffect(() => {
+    window.hotkeyAI.shortcuts.getFailures().then(setShortcutFailures)
+    return window.hotkeyAI.shortcuts.onFailuresChanged(setShortcutFailures)
+  }, [])
+
+  // Main can request a tab switch (e.g. the overlay's "Open API keys" action).
+  useEffect(
+    () =>
+      window.hotkeyAI.onNavigate((tab) => {
+        if (tab === 'keys') setView({ type: 'keys' })
+        else if (tab === 'settings') setView({ type: 'settings' })
+        else setView({ type: 'list' })
+      }),
+    []
+  )
 
   async function handleSave(input: AssistantInput): Promise<void> {
     if (view.type === 'edit' && view.assistant) {
@@ -83,6 +101,7 @@ export function ManagementApp() {
         ) : (
           <AssistantListPage
             assistants={assistants}
+            shortcutFailures={shortcutFailures}
             onCreate={() => setView({ type: 'edit' })}
             onEdit={(assistant) => setView({ type: 'edit', assistant })}
             onDelete={handleDelete}

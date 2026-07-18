@@ -5,7 +5,11 @@ import type { AppSettings, ChatWindowSize } from '../../preload/shared/types'
 // Defaults are spread over the stored value on load, so a new field like
 // chatWindowOpacity reads its default for users whose settings.json predates
 // it — no schema migration needed. Opacity 1 = fully opaque.
-const DEFAULT_SETTINGS: AppSettings = { chatWindowSize: 'small', chatWindowOpacity: 1 }
+const DEFAULT_SETTINGS: AppSettings = {
+  chatWindowSize: 'small',
+  chatWindowOpacity: 1,
+  launchAtStartup: false
+}
 
 const store = new Store<{ settings: AppSettings }>({
   name: 'settings',
@@ -30,4 +34,12 @@ export function getChatWindowOpacity(): number {
 
 export function setChatWindowOpacity(opacity: number): void {
   store.set('settings', { ...loadSettings(), chatWindowOpacity: opacity })
+}
+
+export function getLaunchAtStartup(): boolean {
+  return loadSettings().launchAtStartup
+}
+
+export function setLaunchAtStartup(enabled: boolean): void {
+  store.set('settings', { ...loadSettings(), launchAtStartup: enabled })
 }

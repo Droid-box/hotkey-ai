@@ -69,6 +69,23 @@ app.on('before-quit', () => {
 
 class ManagementWindowManager {
   private window: BrowserWindow | null = null
+  private pendingNavigate: string | null = null
+
+  // Switch the management UI to a tab (e.g. 'keys'). If the window is still
+  // loading (or being created), the target is queued and flushed once its
+  // renderer has loaded, so the message is never sent before a listener exists.
+  navigateTo(tab: string): void {
+    this.pendingNavigate = tab
+    this.flushNavigate()
+  }
+
+  private flushNavigate(): void {
+    const win = this.window
+    if (!win || win.isDestroyed() || this.pendingNavigate === null) return
+    if (win.webContents.isLoading()) return
+    win.webContents.send(IpcChannels.managementNavigate, this.pendingNavigate)
+    this.pendingNavigate = null
+  }
 
   showOrCreate(): void {
     if (this.window && !this.window.isDestroyed()) {
@@ -183,6 +200,9 @@ class ManagementWindowManager {
       shell.openExternal(details.url)
       return { action: 'deny' }
     })
+
+    // Deliver any navigation queued before the renderer finished loading.
+    this.window.webContents.on('did-finish-load', () => this.flushNavigate())
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       this.window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/management/index.html`)

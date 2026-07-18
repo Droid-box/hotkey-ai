@@ -18,6 +18,7 @@ const transparencyToOpacity = (pct: number): number => Number((1 - pct / 100).to
 export function SettingsPage() {
   const [size, setSize] = useState<ChatWindowSize | null>(null)
   const [opacity, setOpacity] = useState<number | null>(null)
+  const [launchAtStartup, setLaunchAtStartup] = useState<boolean | null>(null)
 
   // Match the transparency control's width to the size segmented control so
   // their left/right edges line up. Measured (not hardcoded) so it stays exact
@@ -38,6 +39,7 @@ export function SettingsPage() {
     window.hotkeyAI.settings.get().then((s) => {
       setSize(s.chatWindowSize)
       setOpacity(s.chatWindowOpacity)
+      setLaunchAtStartup(s.launchAtStartup)
     })
   }, [])
 
@@ -50,6 +52,12 @@ export function SettingsPage() {
     const newOpacity = transparencyToOpacity(pct)
     setOpacity(newOpacity)
     void window.hotkeyAI.settings.setChatWindowOpacity(newOpacity)
+  }
+
+  function toggleLaunchAtStartup(): void {
+    const next = !launchAtStartup
+    setLaunchAtStartup(next)
+    void window.hotkeyAI.settings.setLaunchAtStartup(next)
   }
 
   const transparency = opacity == null ? 0 : opacityToTransparency(opacity)
@@ -109,6 +117,21 @@ export function SettingsPage() {
             />
             <span className="slider-value">{transparency}%</span>
           </div>
+        </div>
+
+        <div className="setting-row">
+          <span className="field-label">Launch at startup</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={launchAtStartup === true}
+            aria-label="Launch at startup"
+            disabled={launchAtStartup == null}
+            className={`toggle ${launchAtStartup ? 'toggle-on' : ''}`}
+            onClick={toggleLaunchAtStartup}
+          >
+            <span className="toggle-knob" />
+          </button>
         </div>
       </div>
     </div>

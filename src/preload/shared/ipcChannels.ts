@@ -6,12 +6,15 @@ export const IpcChannels = {
   assistantUpdated: 'assistant:updated',
 
   shortcutCheckConflict: 'shortcut:check-conflict',
+  shortcutGetFailures: 'shortcut:get-failures',
+  shortcutFailuresChanged: 'shortcut:failures-changed',
 
   modelsList: 'models:list',
 
   settingsGet: 'settings:get',
   settingsSetChatWindowSize: 'settings:set-chat-window-size',
   settingsSetChatWindowOpacity: 'settings:set-chat-window-opacity',
+  settingsSetLaunchAtStartup: 'settings:set-launch-at-startup',
 
   windowMinimize: 'window:minimize',
   windowToggleMaximize: 'window:toggle-maximize',
@@ -29,6 +32,9 @@ export const IpcChannels = {
   overlayClose: 'overlay:close',
   overlayResizeContent: 'overlay:resize-content',
   overlaySetPinned: 'overlay:set-pinned',
+  overlayOpenApiKeys: 'overlay:open-api-keys',
+
+  managementNavigate: 'management:navigate',
 
   chatSend: 'chat:send',
   chatAbort: 'chat:abort',

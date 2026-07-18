@@ -19,9 +19,20 @@ import type {
 const bridge: ManagementBridge = {
   appName: 'Hotkey AI',
   platform: process.platform,
+  onNavigate: (callback: (tab: string) => void): (() => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, tab: string): void => callback(tab)
+    ipcRenderer.on(IpcChannels.managementNavigate, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.managementNavigate, listener)
+  },
   shortcuts: {
     checkConflict: (accelerator: string, excludeId?: string): Promise<ShortcutCheckResult> =>
-      ipcRenderer.invoke(IpcChannels.shortcutCheckConflict, accelerator, excludeId)
+      ipcRenderer.invoke(IpcChannels.shortcutCheckConflict, accelerator, excludeId),
+    getFailures: (): Promise<string[]> => ipcRenderer.invoke(IpcChannels.shortcutGetFailures),
+    onFailuresChanged: (callback: (assistantIds: string[]) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, ids: string[]): void => callback(ids)
+      ipcRenderer.on(IpcChannels.shortcutFailuresChanged, listener)
+      return () => ipcRenderer.removeListener(IpcChannels.shortcutFailuresChanged, listener)
+    }
   },
   assistants: {
     list: (): Promise<Assistant[]> => ipcRenderer.invoke(IpcChannels.assistantList),
@@ -56,7 +67,9 @@ const bridge: ManagementBridge = {
     setChatWindowSize: (size: ChatWindowSize): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.settingsSetChatWindowSize, size),
     setChatWindowOpacity: (opacity: number): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowOpacity, opacity)
+      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowOpacity, opacity),
+    setLaunchAtStartup: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.settingsSetLaunchAtStartup, enabled)
   },
   windowControls: {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),

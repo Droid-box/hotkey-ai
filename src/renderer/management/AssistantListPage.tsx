@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import type { Assistant } from '../../preload/shared/types'
 import { ConfirmDialog } from './ConfirmDialog'
-import { EditIcon, PlusIcon, TrashIcon } from './icons'
+import { EditIcon, PlusIcon, TrashIcon, WarningIcon } from './icons'
 
 interface Props {
   assistants: Assistant[]
+  /** Assistant ids whose global shortcut the OS refused to register. */
+  shortcutFailures: string[]
   onCreate: () => void
   onEdit: (assistant: Assistant) => void
   onDelete: (id: string) => void
@@ -15,8 +17,15 @@ const PROVIDER_LABELS: Record<string, string> = {
   anthropic: 'Anthropic'
 }
 
-export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Props) {
+export function AssistantListPage({
+  assistants,
+  shortcutFailures,
+  onCreate,
+  onEdit,
+  onDelete
+}: Props) {
   const [pendingDelete, setPendingDelete] = useState<Assistant | null>(null)
+  const failedIds = new Set(shortcutFailures)
 
   return (
     <div className="page">
@@ -62,7 +71,17 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
                   <td className="text-muted">{assistant.model}</td>
                   <td>
                     {assistant.shortcut ? (
-                      <span className="kbd">{assistant.shortcut}</span>
+                      <span className="kbd-cell">
+                        <span className="kbd">{assistant.shortcut}</span>
+                        {failedIds.has(assistant.id) && (
+                          <span
+                            className="shortcut-warning"
+                            title="This shortcut couldn't be registered — another app may already be using it."
+                          >
+                            <WarningIcon />
+                          </span>
+                        )}
+                      </span>
                     ) : (
                       <span className="text-muted">Not set</span>
                     )}

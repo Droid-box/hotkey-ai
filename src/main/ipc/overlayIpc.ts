@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import { overlayWindowManager } from '../windows/overlayWindow'
+import { managementWindowManager } from '../windows/managementWindow'
 
 const ContentHeightSchema = z.number().min(0).max(4000)
 
@@ -14,5 +15,13 @@ export function registerOverlayIpc(): void {
 
   ipcMain.on(IpcChannels.overlaySetPinned, (_event, rawPinned: unknown) => {
     overlayWindowManager.setPinned(z.boolean().parse(rawPinned))
+  })
+
+  // From a "no API key" error in the overlay: hide the (always-on-top) overlay
+  // so it doesn't cover the window, then open the management UI on the keys tab.
+  ipcMain.on(IpcChannels.overlayOpenApiKeys, () => {
+    overlayWindowManager.hide()
+    managementWindowManager.showOrCreate()
+    managementWindowManager.navigateTo('keys')
   })
 }

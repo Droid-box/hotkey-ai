@@ -211,6 +211,30 @@ body {
   white-space: pre-wrap;
 }
 
+.msg-error-actions {
+  display: flex;
+  margin-top: 8px;
+}
+
+.msg-error-btn {
+  appearance: none;
+  padding: 4px 12px;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 7px;
+  background: transparent;
+  color: #fca5a5;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.msg-error-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
 .msg-pending {
   align-self: flex-start;
   color: #6b6b74;

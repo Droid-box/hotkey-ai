@@ -1,9 +1,16 @@
 import { ipcMain } from 'electron'
+import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import type { AppSettings } from '../../preload/shared/types'
 import { ChatWindowOpacitySchema, ChatWindowSizeSchema } from '../store/schema'
-import { loadSettings, setChatWindowOpacity, setChatWindowSize } from '../store/settingsStore'
+import {
+  loadSettings,
+  setChatWindowOpacity,
+  setChatWindowSize,
+  setLaunchAtStartup
+} from '../store/settingsStore'
 import { overlayWindowManager } from '../windows/overlayWindow'
+import { applyLaunchAtStartup } from '../lib/loginItem'
 
 export function registerSettingsIpc(): void {
   ipcMain.handle(IpcChannels.settingsGet, (): AppSettings => loadSettings())
@@ -21,5 +28,11 @@ export function registerSettingsIpc(): void {
     // even while it's hidden, so this both updates a visible overlay live and
     // carries the new value into the next summon.
     overlayWindowManager.applyChatWindowOpacity()
+  })
+
+  ipcMain.handle(IpcChannels.settingsSetLaunchAtStartup, (_event, rawEnabled: unknown): void => {
+    const enabled = z.boolean().parse(rawEnabled)
+    setLaunchAtStartup(enabled)
+    applyLaunchAtStartup(enabled)
   })
 }

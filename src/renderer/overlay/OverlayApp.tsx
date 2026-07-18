@@ -4,6 +4,7 @@ import { ChatMarkdown } from './ChatMarkdown'
 
 interface DisplayMessage extends ChatMessage {
   error?: boolean
+  errorAction?: 'add-api-key'
 }
 
 // Classic thumbtack: round head + shaft + needle point. Filled when pinned.
@@ -81,14 +82,37 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-function MessageBubble({ message, streaming }: { message: DisplayMessage; streaming: boolean }) {
+function MessageBubble({
+  message,
+  streaming,
+  onRetry
+}: {
+  message: DisplayMessage
+  streaming: boolean
+  onRetry: () => void
+}) {
   const isUser = message.role === 'user'
   return (
     <div className={`msg-row ${isUser ? 'msg-row-user' : ''}`}>
       <div
         className={`msg ${isUser ? 'msg-user' : 'msg-assistant'} ${message.error ? 'msg-error' : ''}`}
       >
-        {isUser || message.error ? (
+        {message.error ? (
+          <>
+            <span>{message.content}</span>
+            <div className="msg-error-actions">
+              {message.errorAction === 'add-api-key' ? (
+                <button className="msg-error-btn" onClick={() => window.hotkeyAI.openApiKeys()}>
+                  Open API keys
+                </button>
+              ) : (
+                <button className="msg-error-btn" onClick={onRetry}>
+                  Retry
+                </button>
+              )}
+            </div>
+          </>
+        ) : isUser ? (
           message.content
         ) : (
           <div className="msg-markdown">
@@ -145,10 +169,13 @@ export function OverlayApp() {
         setStreaming(false)
         requestAnimationFrame(() => inputRef.current?.focus())
       }),
-      window.hotkeyAI.onStreamError(({ assistantId, message }) => {
+      window.hotkeyAI.onStreamError(({ assistantId, message, action }) => {
         if (assistantId !== assistantIdRef.current) return
         setStreaming(false)
-        setMessages((prev) => [...prev, { role: 'assistant', content: message, error: true }])
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: message, error: true, errorAction: action }
+        ])
       })
     ]
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
@@ -197,6 +224,18 @@ export function OverlayApp() {
     setDraft('')
     setStreaming(true)
     window.hotkeyAI.sendMessage(assistant.id, text)
+  }
+
+  function retry(): void {
+    if (!assistant || streaming) return
+    // Re-send the most recent user turn. Main dropped it from history when the
+    // request failed, so sendMessage re-appends it; we just clear the error
+    // bubble(s) and keep the user's message on screen.
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user' && !m.error)
+    if (!lastUser) return
+    setMessages((prev) => prev.filter((m) => !m.error))
+    setStreaming(true)
+    window.hotkeyAI.sendMessage(assistant.id, lastUser.content)
   }
 
   function newChat(): void {
@@ -267,6 +306,7 @@ export function OverlayApp() {
                 <MessageBubble
                   key={i}
                   message={message}
+                  onRetry={retry}
                   streaming={
                     streaming && i === messages.length - 1 && message.role === 'assistant'
                   }

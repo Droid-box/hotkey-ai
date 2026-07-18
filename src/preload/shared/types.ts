@@ -7,6 +7,8 @@ export interface AppSettings {
   chatWindowSize: ChatWindowSize
   /** Overlay window opacity, 0.5–1 (1 = fully opaque). */
   chatWindowOpacity: number
+  /** Start Hotkey AI automatically when the user signs in to Windows. */
+  launchAtStartup: boolean
 }
 
 export interface Assistant {
@@ -57,8 +59,13 @@ export interface ManagementBridge {
   appName: string
   /** Node's process.platform — lets the UI hide controls that misbehave under WSLg. */
   platform: string
+  /** Main asks the UI to switch tabs (e.g. 'keys' from a missing-key error). */
+  onNavigate: (callback: (tab: string) => void) => () => void
   shortcuts: {
     checkConflict: (accelerator: string, excludeId?: string) => Promise<ShortcutCheckResult>
+    /** Assistant ids whose global shortcut the OS refused to register. */
+    getFailures: () => Promise<string[]>
+    onFailuresChanged: (callback: (assistantIds: string[]) => void) => () => void
   }
   assistants: {
     list: () => Promise<Assistant[]>
@@ -81,6 +88,7 @@ export interface ManagementBridge {
     get: () => Promise<AppSettings>
     setChatWindowSize: (size: ChatWindowSize) => Promise<void>
     setChatWindowOpacity: (opacity: number) => Promise<void>
+    setLaunchAtStartup: (enabled: boolean) => Promise<void>
   }
   windowControls: {
     minimize: () => void
@@ -133,6 +141,9 @@ export interface ChatStreamEnd {
 export interface ChatStreamError {
   assistantId: string
   message: string
+  /** Suggested user action for this error. 'add-api-key' => no key configured
+   *  (retrying won't help); undefined => a transient error worth retrying. */
+  action?: 'add-api-key'
 }
 
 export interface OverlayBridge {
@@ -146,6 +157,8 @@ export interface OverlayBridge {
   copyText: (text: string) => void
   /** Pin/unpin: a pinned overlay stays open when it loses focus. */
   setPinned: (pinned: boolean) => void
+  /** Open the management window on the API keys tab (from a missing-key error). */
+  openApiKeys: () => void
   onStreamChunk: (callback: (payload: ChatStreamChunk) => void) => () => void
   onStreamEnd: (callback: (payload: ChatStreamEnd) => void) => () => void
   onStreamError: (callback: (payload: ChatStreamError) => void) => () => void

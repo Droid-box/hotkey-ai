@@ -16,6 +16,22 @@ export function PlusIcon() {
   )
 }
 
+export function WarningIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M8 2 15 14H1L8 2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M8 6.5v3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="8" cy="11.6" r="0.7" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function EditIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">

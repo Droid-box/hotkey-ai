@@ -27,6 +27,9 @@ const bridge: OverlayBridge = {
   setPinned: (pinned: boolean): void => {
     ipcRenderer.send(IpcChannels.overlaySetPinned, pinned)
   },
+  openApiKeys: (): void => {
+    ipcRenderer.send(IpcChannels.overlayOpenApiKeys)
+  },
   sendMessage: (assistantId: string, message: string): void => {
     ipcRenderer.send(IpcChannels.chatSend, { assistantId, message })
   },

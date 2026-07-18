@@ -27,8 +27,8 @@ export function registerChatIpc(store: AssistantStore): void {
   ipcMain.on(IpcChannels.chatSend, (event, rawPayload: unknown) => {
     const { assistantId, message } = ChatSendSchema.parse(rawPayload)
 
-    const sendError = (errorMessage: string): void => {
-      const payload: ChatStreamError = { assistantId, message: errorMessage }
+    const sendError = (errorMessage: string, action?: ChatStreamError['action']): void => {
+      const payload: ChatStreamError = { assistantId, message: errorMessage, action }
       event.sender.send(IpcChannels.chatStreamError, payload)
     }
 
@@ -46,7 +46,8 @@ export function registerChatIpc(store: AssistantStore): void {
     const apiKey = secretsStore.getApiKey(assistant.provider)
     if (!apiKey) {
       sendError(
-        `No API key configured for ${PROVIDER_LABELS[assistant.provider] ?? assistant.provider}. Add one under API keys in the Hotkey AI window.`
+        `No API key configured for ${PROVIDER_LABELS[assistant.provider] ?? assistant.provider}.`,
+        'add-api-key'
       )
       return
     }

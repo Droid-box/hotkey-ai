@@ -1,4 +1,5 @@
-import { app, Menu } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
+import { IpcChannels } from '../preload/shared/ipcChannels'
 import { createTray } from './tray'
 import { managementWindowManager } from './windows/managementWindow'
 import { overlayWindowManager } from './windows/overlayWindow'
@@ -11,6 +12,8 @@ import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { assistantStore } from './store/assistantStore'
+import { getLaunchAtStartup } from './store/settingsStore'
+import { applyLaunchAtStartup } from './lib/loginItem'
 import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
@@ -57,6 +60,12 @@ function shortcutEntries(): { assistantId: string; accelerator: string }[] {
 
 function syncShortcuts(): void {
   shortcutManager.registerAll(shortcutEntries(), openAssistantOverlay)
+  // Tell any open window which assistants' shortcuts the OS refused, so the
+  // management list can flag them instead of the failure being silent.
+  const failed = shortcutManager.getFailedAssistantIds()
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(IpcChannels.shortcutFailuresChanged, failed)
+  }
 }
 
 // WSLg's GPU passthrough is flaky (windows can render blank grey while the
@@ -89,6 +98,13 @@ if (!gotSingleInstanceLock) {
     registerModelsIpc()
     registerSettingsIpc()
     registerWindowControlsIpc()
+
+    // Load persisted conversations before the overlay can be summoned.
+    conversationCache.init()
+
+    // Re-assert the OS login item from our stored preference, in case it was
+    // changed outside the app (e.g. Task Manager > Startup).
+    applyLaunchAtStartup(getLaunchAtStartup())
 
     overlayWindowManager.create()
     syncShortcuts()
