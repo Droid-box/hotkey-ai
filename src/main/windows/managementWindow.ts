@@ -3,6 +3,12 @@ import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 
+// Minimum window size, shared by the native resize (BrowserWindow minWidth/
+// minHeight) and the custom WSLg resize handles (windowControlsIpc) so both
+// enforce the same floor and the UI never becomes cramped.
+export const MANAGEMENT_MIN_WIDTH = 640
+export const MANAGEMENT_MIN_HEIGHT = 480
+
 // Once the app is actually quitting (tray Quit, dev-server watchdog, OS
 // shutdown), the hide-to-tray close handler must stand aside — a
 // preventDefault() there would otherwise veto app.quit() entirely.
@@ -25,6 +31,8 @@ class ManagementWindowManager {
     this.window = new BrowserWindow({
       width: 960,
       height: 640,
+      minWidth: MANAGEMENT_MIN_WIDTH,
+      minHeight: MANAGEMENT_MIN_HEIGHT,
       show: false,
       title: 'Hotkey AI',
       // Transparent so the rounded .app-shell corners (management.css) show

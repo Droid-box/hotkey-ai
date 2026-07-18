@@ -1,9 +1,10 @@
 import { BrowserWindow, ipcMain, screen, type Rectangle } from 'electron'
 import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
+import { MANAGEMENT_MIN_WIDTH, MANAGEMENT_MIN_HEIGHT } from '../windows/managementWindow'
 
-const MIN_WIDTH = 640
-const MIN_HEIGHT = 420
+const MIN_WIDTH = MANAGEMENT_MIN_WIDTH
+const MIN_HEIGHT = MANAGEMENT_MIN_HEIGHT
 
 // On Linux (WSLg) the window is deliberately non-resizable so Chromium adds
 // no invisible grab-margin (WSLg renders that margin as a visible band), and
