@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import Markdown from 'react-markdown'
 import type { ChatMessage, OverlayConfigurePayload } from '../../preload/shared/types'
+import { ChatMarkdown } from './ChatMarkdown'
 
 interface DisplayMessage extends ChatMessage {
   error?: boolean
@@ -92,7 +92,7 @@ function MessageBubble({ message, streaming }: { message: DisplayMessage; stream
           message.content
         ) : (
           <div className="msg-markdown">
-            <Markdown>{message.content}</Markdown>
+            <ChatMarkdown>{message.content}</ChatMarkdown>
             {streaming && <span className="cursor" />}
           </div>
         )}

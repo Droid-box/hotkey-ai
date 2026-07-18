@@ -13,6 +13,30 @@
   outline: none;
 }
 
+/* Consistent thin dark scrollbars for every scrollable area (messages,
+   input, code blocks, tables). */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 body {
   margin: 0;
   background: transparent;
@@ -147,15 +171,6 @@ body {
   overscroll-behavior: contain;
 }
 
-.chat-messages::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-}
-
 .msg-row {
   display: flex;
   flex-direction: column;
@@ -268,7 +283,7 @@ body {
   font-weight: 600;
 }
 
-.msg-markdown code {
+.msg-markdown .inline-code {
   padding: 1px 5px;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.08);
@@ -276,26 +291,163 @@ body {
   font-size: 12px;
 }
 
-.msg-markdown pre {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.35);
-  overflow-x: auto;
-}
-
-.msg-markdown pre code {
-  padding: 0;
-  background: none;
-}
-
 .msg-markdown a {
   color: #93c5fd;
 }
 
 .msg-markdown blockquote {
+  margin: 8px 0;
   padding-left: 10px;
   border-left: 2px solid rgba(255, 255, 255, 0.15);
   color: #a1a1aa;
+}
+
+/* Tables (GFM) */
+
+.msg-markdown table {
+  width: 100%;
+  margin: 8px 0;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  display: block;
+  overflow-x: auto;
+}
+
+.msg-markdown th,
+.msg-markdown td {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
+}
+
+.msg-markdown th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+
+/* Fenced code blocks — dedicated container with header + copy button */
+
+.code-block {
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px 5px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-block-lang {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11px;
+  color: #8a8a94;
+  text-transform: lowercase;
+}
+
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.code-copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
+}
+
+.code-copy-done {
+  color: #86efac;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+
+.code-block pre code {
+  padding: 0;
+  background: none;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Syntax highlighting palette (highlight.js token classes), tuned to the
+   app's dark theme. */
+.hljs-comment,
+.hljs-quote {
+  color: #6b6b74;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: #c792ea;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-meta-string {
+  color: #a5d6a7;
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #f7a072;
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-section {
+  color: #82aaff;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable {
+  color: #ffcb6b;
+}
+
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-name {
+  color: #89ddff;
+}
+
+.hljs-tag {
+  color: #8a8a94;
+}
+
+.hljs-meta {
+  color: #7f8c98;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 600;
 }
 
 .cursor {
@@ -354,15 +506,6 @@ body {
 .chat-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.25);
-}
-
-.chat-input::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chat-input::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
 }
 
 .chat-send-icon {
