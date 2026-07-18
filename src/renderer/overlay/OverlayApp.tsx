@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ChatMessage, OverlayConfigurePayload } from '../../preload/shared/types'
 import { ChatMarkdown } from './ChatMarkdown'
 
@@ -115,31 +115,6 @@ export function OverlayApp() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const inputAreaRef = useRef<HTMLDivElement>(null)
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const pendingOpenAnimRef = useRef(false)
-
-  // Restart the slide-up animation, but only while the window is actually
-  // visible. On a fresh open, configure arrives while the window is still
-  // hidden; the animation is deferred until the visibilitychange to
-  // "visible" so it plays on screen (fixes it not showing on Windows).
-  const playOpenAnimation = useCallback(() => {
-    if (!pendingOpenAnimRef.current) return
-    if (document.visibilityState !== 'visible') return
-    const el = overlayRef.current
-    if (!el) return
-    pendingOpenAnimRef.current = false
-    el.classList.remove('overlay-open')
-    void el.offsetWidth // reflow so the keyframes restart even if present
-    el.classList.add('overlay-open')
-  }, [])
-
-  useEffect(() => {
-    const onVisible = (): void => {
-      if (document.visibilityState === 'visible') playOpenAnimation()
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [playOpenAnimation])
 
   useEffect(() => {
     const unsubscribers = [
@@ -151,17 +126,9 @@ export function OverlayApp() {
         setStreaming(false)
         setDraft('')
         setPinned(payload.pinned)
-        // Focus the input every time the overlay is summoned.
+        // Focus the input every time the overlay is summoned. (The slide-up
+        // open animation is driven entirely by the main process.)
         requestAnimationFrame(() => inputRef.current?.focus())
-        // On a fresh open, arm the slide-up animation. It's actually started
-        // on the window's visibility transition (playOpenAnimation), because
-        // configure arrives while the window is still hidden — starting the
-        // animation before the window is composited makes it play invisibly
-        // on GPU-accelerated Windows.
-        if (payload.justOpened) {
-          pendingOpenAnimRef.current = true
-          playOpenAnimation()
-        }
       }),
       window.hotkeyAI.onStreamChunk(({ assistantId, delta }) => {
         if (assistantId !== assistantIdRef.current) return
@@ -247,7 +214,7 @@ export function OverlayApp() {
   }
 
   return (
-    <div className="overlay" ref={overlayRef}>
+    <div className="overlay">
       <header className="overlay-header" ref={headerRef}>
         <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
         {assistant && (
