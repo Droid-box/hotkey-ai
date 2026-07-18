@@ -40,7 +40,9 @@ export function ManagementApp() {
   return (
     <div className={`app-shell ${maximized ? 'app-shell-maximized' : ''}`}>
       <TitleBar />
-      {window.hotkeyAI.platform === 'linux' && <ResizeHandles />}
+      {/* No resize handles while maximized — matches native windows, and
+          removes the resize cursors along with the drag behavior. */}
+      {window.hotkeyAI.platform === 'linux' && !maximized && <ResizeHandles />}
       <div className="app-body">
         <nav className="tabs">
           <button

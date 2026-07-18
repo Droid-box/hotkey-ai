@@ -174,6 +174,9 @@ export function registerWindowControlsIpc(): void {
     const { edge, phase } = ResizePayloadSchema.parse(rawPayload)
 
     if (phase === 'start') {
+      // A maximized window isn't resizable (the renderer already hides the
+      // handles; this guards against any stray start).
+      if (isMaximized(win)) return
       startResize(win, edge)
     } else {
       endResize(win)
