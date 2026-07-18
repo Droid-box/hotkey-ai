@@ -23,9 +23,6 @@ export function AssistantListPage({ assistants, onCreate, onEdit, onDelete }: Pr
       <header className="page-header">
         <div>
           <h1 className="page-title">Assistants</h1>
-          <p className="page-subtitle">
-            Custom AI assistants, each with its own provider, model, and global shortcut.
-          </p>
         </div>
         <button className="btn btn-primary" onClick={onCreate}>
           Create

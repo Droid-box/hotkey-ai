@@ -168,11 +168,6 @@ export function ApiKeysPage() {
       <header className="page-header">
         <div>
           <h1 className="page-title">API keys</h1>
-          <p className="page-subtitle">
-            One key per provider, shared by every assistant using that provider. Keys are
-            verified before saving, encrypted with your operating system&rsquo;s credential
-            storage, and never shown again.
-          </p>
         </div>
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           Add API key
