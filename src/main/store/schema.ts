@@ -5,6 +5,10 @@ export const ProviderIdSchema = z.enum(['openai', 'anthropic'])
 
 export const ChatWindowSizeSchema = z.enum(['small', 'medium', 'large'])
 
+// Overlay window opacity. Floored at 0.5 so the chat stays legible — the UI
+// exposes this as "transparency" (0–50%), i.e. 1 - opacity.
+export const ChatWindowOpacitySchema = z.number().min(0.5).max(1)
+
 // Constrained against the shared Assistant type so this validator and the
 // renderer-facing type in preload/shared/types.ts can't silently drift.
 export const AssistantSchema = z.object({

@@ -54,7 +54,9 @@ const bridge: ManagementBridge = {
   settings: {
     get: (): Promise<AppSettings> => ipcRenderer.invoke(IpcChannels.settingsGet),
     setChatWindowSize: (size: ChatWindowSize): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowSize, size)
+      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowSize, size),
+    setChatWindowOpacity: (opacity: number): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.settingsSetChatWindowOpacity, opacity)
   },
   windowControls: {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),

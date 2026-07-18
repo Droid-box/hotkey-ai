@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import type { ChatWindowSize, OverlayConfigurePayload } from '../../preload/shared/types'
-import { getChatWindowSize } from '../store/settingsStore'
+import { getChatWindowOpacity, getChatWindowSize } from '../store/settingsStore'
 
 // Chat window size presets (Settings → Chat Window Size). Width is fixed per
 // preset; the window still opens compact and grows with the conversation up
@@ -49,6 +49,15 @@ class OverlayWindowManager {
     const dims = CHAT_WINDOW_DIMENSIONS[getChatWindowSize()]
     this.overlayWidth = dims.width
     this.maxHeight = dims.maxHeight
+  }
+
+  // Applies the persisted overlay opacity. setOpacity sticks on the reused
+  // window even while hidden, so this works both live (settings change) and
+  // at startup. No-op on Linux/WSLg, where setOpacity isn't supported.
+  applyChatWindowOpacity(): void {
+    const win = this.window
+    if (!win || win.isDestroyed()) return
+    win.setOpacity(getChatWindowOpacity())
   }
 
   // Created once at startup and reused for every assistant — cheaper than a
@@ -111,6 +120,9 @@ class OverlayWindowManager {
     } else {
       this.window.loadFile(join(__dirname, '../renderer/overlay/index.html'))
     }
+
+    // Restore the saved opacity on this freshly-created window.
+    this.applyChatWindowOpacity()
   }
 
   /** True when the overlay is on screen showing this assistant's chat. */

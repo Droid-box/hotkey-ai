@@ -2,9 +2,10 @@ import Store from 'electron-store'
 import type { AppSettings, ChatWindowSize } from '../../preload/shared/types'
 
 // App-wide preferences (distinct from window-state.json and assistants.json).
-// Small on purpose — one entry today (chat window size); more can slot in
-// alongside without a schema migration.
-const DEFAULT_SETTINGS: AppSettings = { chatWindowSize: 'small' }
+// Defaults are spread over the stored value on load, so a new field like
+// chatWindowOpacity reads its default for users whose settings.json predates
+// it — no schema migration needed. Opacity 1 = fully opaque.
+const DEFAULT_SETTINGS: AppSettings = { chatWindowSize: 'small', chatWindowOpacity: 1 }
 
 const store = new Store<{ settings: AppSettings }>({
   name: 'settings',
@@ -21,4 +22,12 @@ export function getChatWindowSize(): ChatWindowSize {
 
 export function setChatWindowSize(size: ChatWindowSize): void {
   store.set('settings', { ...loadSettings(), chatWindowSize: size })
+}
+
+export function getChatWindowOpacity(): number {
+  return loadSettings().chatWindowOpacity
+}
+
+export function setChatWindowOpacity(opacity: number): void {
+  store.set('settings', { ...loadSettings(), chatWindowOpacity: opacity })
 }

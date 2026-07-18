@@ -5,6 +5,8 @@ export type ChatWindowSize = 'small' | 'medium' | 'large'
 
 export interface AppSettings {
   chatWindowSize: ChatWindowSize
+  /** Overlay window opacity, 0.5–1 (1 = fully opaque). */
+  chatWindowOpacity: number
 }
 
 export interface Assistant {
@@ -78,6 +80,7 @@ export interface ManagementBridge {
   settings: {
     get: () => Promise<AppSettings>
     setChatWindowSize: (size: ChatWindowSize) => Promise<void>
+    setChatWindowOpacity: (opacity: number) => Promise<void>
   }
   windowControls: {
     minimize: () => void
