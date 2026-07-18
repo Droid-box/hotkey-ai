@@ -186,14 +186,6 @@ body {
 
 /* Chat */
 
-/* Fills the gap between header and input while the window collapses to
-   compact on a new chat, keeping the input anchored to the bottom. At
-   compact size it is zero-height. */
-.chat-spacer {
-  flex: 1;
-  min-height: 0;
-}
-
 .chat-messages {
   flex: 1;
   display: flex;

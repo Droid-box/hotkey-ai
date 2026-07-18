@@ -116,9 +116,6 @@ export function OverlayApp() {
   const headerRef = useRef<HTMLElement>(null)
   const inputAreaRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  // Set when the next content resize should animate (collapse to compact on
-  // a new chat) rather than snap instantly.
-  const animateShrinkRef = useRef(false)
 
   useEffect(() => {
     const unsubscribers = [
@@ -126,12 +123,6 @@ export function OverlayApp() {
         setConfigured(true)
         setAssistant(payload.assistant)
         assistantIdRef.current = payload.assistant?.id ?? null
-        // A reset while the overlay stays open (e.g. shortcut pressed again)
-        // arrives as an empty history without justOpened — collapse with the
-        // same animation the New chat button uses.
-        if (!payload.justOpened && payload.history.length === 0) {
-          animateShrinkRef.current = true
-        }
         setMessages(payload.history)
         setStreaming(false)
         setDraft('')
@@ -208,12 +199,7 @@ export function OverlayApp() {
     const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
     const messagesHeight = messages.length > 0 ? (scrollRef.current?.scrollHeight ?? 0) : 0
     const noAssistantHeight = assistant ? 0 : 80
-    const animate = animateShrinkRef.current
-    animateShrinkRef.current = false
-    window.hotkeyAI.resizeContent(
-      headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2,
-      animate
-    )
+    window.hotkeyAI.resizeContent(headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2)
   }, [assistant, messages, draft, streaming])
 
   function send(): void {
@@ -228,7 +214,6 @@ export function OverlayApp() {
   function newChat(): void {
     if (!assistant) return
     window.hotkeyAI.resetChat(assistant.id)
-    animateShrinkRef.current = true
     setMessages([])
     setStreaming(false)
     inputRef.current?.focus()
@@ -288,7 +273,6 @@ export function OverlayApp() {
 
       {assistant ? (
         <>
-          {messages.length === 0 && <div className="chat-spacer" />}
           {messages.length > 0 && (
             <div className="chat-messages" ref={scrollRef}>
               {messages.map((message, i) => (

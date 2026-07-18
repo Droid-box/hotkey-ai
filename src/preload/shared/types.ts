@@ -124,12 +124,8 @@ export interface ChatStreamError {
 export interface OverlayBridge {
   onConfigure: (callback: (payload: OverlayConfigurePayload) => void) => () => void
   close: () => void
-  /**
-   * Ask the main process to fit the overlay window height to rendered
-   * content. `animate` tweens the height (bottom edge fixed) — used when
-   * collapsing back to compact on a new chat.
-   */
-  resizeContent: (contentHeight: number, animate?: boolean) => void
+  /** Ask the main process to fit the overlay window height to rendered content. */
+  resizeContent: (contentHeight: number) => void
   sendMessage: (assistantId: string, message: string) => void
   abort: (assistantId: string) => void
   resetChat: (assistantId: string) => void

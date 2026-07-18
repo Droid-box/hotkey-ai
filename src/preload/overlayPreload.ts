@@ -21,8 +21,8 @@ const bridge: OverlayBridge = {
   close: (): void => {
     ipcRenderer.send(IpcChannels.overlayClose)
   },
-  resizeContent: (contentHeight: number, animate = false): void => {
-    ipcRenderer.send(IpcChannels.overlayResizeContent, { height: contentHeight, animate })
+  resizeContent: (contentHeight: number): void => {
+    ipcRenderer.send(IpcChannels.overlayResizeContent, contentHeight)
   },
   setPinned: (pinned: boolean): void => {
     ipcRenderer.send(IpcChannels.overlaySetPinned, pinned)
