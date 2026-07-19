@@ -2,7 +2,8 @@
    highlighting, and the composer input. Used by both the overlay chat and the
    assistant editor's test chat so they render identically. The scroll
    container (.chat-messages) and outer input padding are provided per-context
-   by each window's own stylesheet. */
+   by each window's own stylesheet. Colors come from shared/theme.css so the
+   chat follows the app theme; fenced code blocks stay dark in both themes. */
 
 .msg-row {
   display: flex;
@@ -25,22 +26,22 @@
 }
 
 .msg-user {
-  background: #3b3b41;
-  color: #f4f4f5;
+  background: var(--msg-user-bg);
+  color: var(--msg-user-text);
   border-bottom-right-radius: 4px;
   white-space: pre-wrap;
 }
 
 .msg-assistant {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e4e4e7;
+  background: var(--msg-assistant-bg);
+  color: var(--msg-assistant-text);
   border-bottom-left-radius: 4px;
 }
 
 .msg-error {
-  background: rgba(248, 113, 113, 0.1);
-  color: #fca5a5;
-  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
   white-space: pre-wrap;
 }
 
@@ -52,10 +53,10 @@
 .msg-error-btn {
   appearance: none;
   padding: 4px 12px;
-  border: 1px solid rgba(248, 113, 113, 0.4);
+  border: 1px solid var(--error-btn-border);
   border-radius: 7px;
   background: transparent;
-  color: #fca5a5;
+  color: var(--error-text);
   font: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -64,13 +65,13 @@
 }
 
 .msg-error-btn:hover {
-  background: rgba(248, 113, 113, 0.15);
-  border-color: rgba(248, 113, 113, 0.6);
+  background: var(--error-btn-hover-bg);
+  border-color: var(--error-border-hover);
 }
 
 .msg-pending {
   align-self: flex-start;
-  color: #6b6b74;
+  color: var(--text-faint);
 }
 
 .msg-copy {
@@ -84,7 +85,7 @@
   border-radius: 8px;
   padding: 0;
   background: transparent;
-  color: #6b6b74;
+  color: var(--text-faint);
   cursor: pointer;
   transition: opacity 0.15s, background-color 0.15s, color 0.15s;
 }
@@ -94,13 +95,13 @@
 }
 
 .msg-copy:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e4e4e7;
+  background: var(--hover-bg);
+  color: var(--text);
 }
 
 .msg-copy-done {
   opacity: 1;
-  color: #86efac;
+  color: var(--success);
 }
 
 /* Markdown inside assistant messages */
@@ -143,20 +144,20 @@
 .msg-markdown .inline-code {
   padding: 1px 5px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--inline-code-bg);
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 12px;
 }
 
 .msg-markdown a {
-  color: #93c5fd;
+  color: var(--link);
 }
 
 .msg-markdown blockquote {
   margin: 8px 0;
   padding-left: 10px;
-  border-left: 2px solid rgba(255, 255, 255, 0.15);
-  color: #a1a1aa;
+  border-left: 2px solid var(--hairline-strong);
+  color: var(--text-muted);
 }
 
 /* Tables (GFM) */
@@ -173,23 +174,24 @@
 .msg-markdown th,
 .msg-markdown td {
   padding: 5px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline-strong);
   text-align: left;
 }
 
 .msg-markdown th {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--hover-bg);
   font-weight: 600;
 }
 
-/* Fenced code blocks — dedicated container with header + copy button */
+/* Fenced code blocks — a dedicated dark container (kept dark in both themes,
+   so the highlight.js palette below needs no light variant). */
 
 .code-block {
   margin: 8px 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
+  background: #17171a;
 }
 
 .code-block-header {
@@ -240,13 +242,16 @@
 .code-block pre code {
   padding: 0;
   background: none;
+  /* Explicit light default so unhighlighted code stays legible on the dark
+     block regardless of the surrounding message text color (light theme). */
+  color: #e4e4e7;
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 12px;
   line-height: 1.5;
 }
 
 /* Syntax highlighting palette (highlight.js token classes), tuned to the
-   app's dark theme. */
+   dark code block. */
 .hljs-comment,
 .hljs-quote {
   color: #6b6b74;
@@ -313,7 +318,7 @@
   height: 13px;
   margin-left: 2px;
   vertical-align: text-bottom;
-  background: #a1a1aa;
+  background: var(--text-muted);
   border-radius: 1px;
   animation: blink 1s steps(1) infinite;
 }
@@ -338,22 +343,22 @@
   overflow-y: hidden;
   /* Room for the send icon pinned at the bottom-right corner. */
   padding: 9px 44px 9px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #f4f4f5;
+  background: var(--control-bg);
+  color: var(--text);
   font: inherit;
   font-size: 13px;
   line-height: 1.5;
 }
 
 .chat-input::placeholder {
-  color: #6b6b74;
+  color: var(--text-faint);
 }
 
 .chat-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--control-border-focus);
 }
 
 .chat-send-icon {
@@ -367,18 +372,18 @@
   height: 28px;
   border: none;
   border-radius: 8px;
-  background: #e4e4e7;
-  color: #18181b;
+  background: var(--accent);
+  color: var(--accent-fg);
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
 }
 
 .chat-send-icon:hover:not(:disabled) {
-  background: #ffffff;
+  background: var(--accent-hover);
 }
 
 .chat-send-icon:disabled {
-  background: rgba(255, 255, 255, 0.07);
-  color: #6b6b74;
+  background: var(--control-bg);
+  color: var(--text-faint);
   cursor: default;
 }

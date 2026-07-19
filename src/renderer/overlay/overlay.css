@@ -6,7 +6,7 @@
    dark glass overlay. Keyboard-only via :focus-visible. */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(228, 228, 231, 0.35);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 :focus:not(:focus-visible) {
@@ -25,12 +25,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -55,10 +55,10 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: rgba(22, 22, 25, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--overlay-bg);
+  border: 1px solid var(--hairline);
   border-radius: 12px;
-  color: #f4f4f5;
+  color: var(--text);
   overflow: hidden;
 }
 
@@ -67,7 +67,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--hairline);
   /* Frameless window: the header doubles as the drag handle. */
   -webkit-app-region: drag;
   user-select: none;
@@ -76,7 +76,7 @@ body {
 .overlay-title {
   font-size: 12px;
   font-weight: 400;
-  color: #d4d4d8;
+  color: var(--overlay-title);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -85,10 +85,10 @@ body {
 .overlay-badge {
   padding: 2px 9px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--hover-bg);
   font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   font-size: 11px;
-  color: #a1a1aa;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -109,25 +109,25 @@ body {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
 }
 
 .overlay-action:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f4f5;
+  background: var(--hover-bg);
+  color: var(--text);
 }
 
 /* Pinned: highlight so the pin state is obvious at a glance. */
 .overlay-action-active {
-  background: rgba(129, 140, 248, 0.22);
-  color: #c7d2fe;
+  background: var(--accent-active-bg);
+  color: var(--accent-active-text);
 }
 
 .overlay-action-active:hover {
-  background: rgba(129, 140, 248, 0.3);
-  color: #e0e7ff;
+  background: var(--accent-active-bg-hover);
+  color: var(--accent-active-text-hover);
 }
 
 .overlay-close {
@@ -139,7 +139,7 @@ body {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--text-muted);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -147,15 +147,15 @@ body {
 }
 
 .overlay-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f4f4f5;
+  background: var(--hover-bg);
+  color: var(--text);
 }
 
 .overlay-body {
   flex: 1;
   padding: 16px;
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--text-muted);
   overflow-y: auto;
 }
 
@@ -174,7 +174,7 @@ body {
 
 .chat-input-area {
   padding: 10px 14px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--hairline);
 }
 
 /* Compact state (no messages yet): the input sits right under the header,

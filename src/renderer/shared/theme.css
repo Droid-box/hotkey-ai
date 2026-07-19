@@ -1,0 +1,126 @@
+/* App-wide theme tokens, shared by the management and overlay renderers.
+   The DARK values are the app's original hardcoded colors, so dark mode is
+   unchanged; the light block overrides them. The active scheme is driven by
+   prefers-color-scheme, which the main process controls via
+   nativeTheme.themeSource (System / Dark / Light) — see the Theme setting.
+
+   Code blocks are intentionally kept dark in both themes (see chat.css), so
+   the syntax-highlight palette needs no light variant. */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #131316;
+  --surface: #1c1c1f;
+  --surface-hover: #252528;
+  --overlay-bg: rgba(22, 22, 25, 0.94);
+
+  /* Borders / dividers */
+  --border: #2c2c30;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --text-faint: #6b6b74;
+  --overlay-title: #d4d4d8;
+
+  /* Accent (primary buttons, send icon, active toggles) */
+  --accent: #e4e4e7;
+  --accent-fg: #18181b;
+  --accent-hover: #d4d4d8;
+
+  /* Interactive tints */
+  --hover-bg: rgba(255, 255, 255, 0.08);
+  --control-bg: rgba(255, 255, 255, 0.05);
+  --control-border: rgba(255, 255, 255, 0.1);
+  --control-border-focus: rgba(255, 255, 255, 0.25);
+
+  /* Chat message bubbles */
+  --msg-user-bg: #3b3b41;
+  --msg-user-text: #f4f4f5;
+  --msg-assistant-bg: rgba(255, 255, 255, 0.06);
+  --msg-assistant-text: #e4e4e7;
+  --inline-code-bg: rgba(255, 255, 255, 0.08);
+  --link: #93c5fd;
+
+  /* Pin / active-control highlight */
+  --accent-active-bg: rgba(129, 140, 248, 0.22);
+  --accent-active-text: #c7d2fe;
+  --accent-active-bg-hover: rgba(129, 140, 248, 0.3);
+  --accent-active-text-hover: #e0e7ff;
+
+  /* Danger / error */
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.1);
+  --error-text: #fca5a5;
+  --error-bg: rgba(248, 113, 113, 0.1);
+  --error-border: rgba(248, 113, 113, 0.25);
+  --error-border-hover: rgba(248, 113, 113, 0.6);
+  --error-btn-border: rgba(248, 113, 113, 0.4);
+  --error-btn-hover-bg: rgba(248, 113, 113, 0.15);
+
+  /* Misc */
+  --ring: rgba(228, 228, 231, 0.35);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --success: #86efac;
+  --scrim: rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg: #f4f4f5;
+    --surface: #ffffff;
+    --surface-hover: #efeff1;
+    --overlay-bg: rgba(250, 250, 252, 0.97);
+
+    --border: #e3e3e7;
+    --hairline: rgba(0, 0, 0, 0.08);
+    --hairline-strong: rgba(0, 0, 0, 0.14);
+
+    --text: #18181b;
+    --text-muted: #6e6e78;
+    --text-faint: #a1a1aa;
+    --overlay-title: #52525b;
+
+    --accent: #18181b;
+    --accent-fg: #ffffff;
+    --accent-hover: #333339;
+
+    --hover-bg: rgba(0, 0, 0, 0.06);
+    --control-bg: #ffffff;
+    --control-border: rgba(0, 0, 0, 0.16);
+    --control-border-focus: rgba(0, 0, 0, 0.38);
+
+    --msg-user-bg: #e4e4e7;
+    --msg-user-text: #18181b;
+    --msg-assistant-bg: rgba(0, 0, 0, 0.05);
+    --msg-assistant-text: #27272a;
+    --inline-code-bg: rgba(0, 0, 0, 0.07);
+    --link: #2563eb;
+
+    --accent-active-bg: rgba(99, 102, 241, 0.14);
+    --accent-active-text: #4338ca;
+    --accent-active-bg-hover: rgba(99, 102, 241, 0.22);
+    --accent-active-text-hover: #3730a3;
+
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.08);
+    --error-text: #b91c1c;
+    --error-bg: rgba(248, 113, 113, 0.12);
+    --error-border: rgba(220, 38, 38, 0.3);
+    --error-border-hover: rgba(220, 38, 38, 0.5);
+    --error-btn-border: rgba(220, 38, 38, 0.35);
+    --error-btn-hover-bg: rgba(220, 38, 38, 0.1);
+
+    --ring: rgba(24, 24, 27, 0.25);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
+    --success: #16a34a;
+    --scrim: rgba(0, 0, 0, 0.35);
+  }
+}

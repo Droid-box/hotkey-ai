@@ -4,6 +4,7 @@ import { is } from '../lib/env'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import { loadManagementWindowState, saveManagementWindowState } from '../store/windowStateStore'
 import { getNormalBounds, rememberNormalBounds } from './normalBounds'
+import { windowBackground } from '../lib/theme'
 
 // Persist window position/size across restarts (debounced). getNormalBounds
 // returns the restored (non-maximized) bounds even while maximized, so the
@@ -71,6 +72,14 @@ class ManagementWindowManager {
   private window: BrowserWindow | null = null
   private pendingNavigate: string | null = null
 
+  // Re-apply the themed native background after a theme change (or OS theme
+  // change while on 'system'), so the window chrome matches the new theme.
+  refreshThemeBackground(): void {
+    if (this.window && !this.window.isDestroyed()) {
+      this.window.setBackgroundColor(windowBackground())
+    }
+  }
+
   // Switch the management UI to a tab (e.g. 'keys'). If the window is still
   // loading (or being created), the target is queued and flushed once its
   // renderer has loaded, so the message is never sent before a listener exists.
@@ -108,8 +117,9 @@ class ManagementWindowManager {
       // Opaque (not transparent): transparent frameless windows on Windows
       // lose native title-bar behaviors like double-click-to-maximize. On
       // Windows 11 the OS (DWM) rounds an opaque frameless window's corners
-      // natively, so we don't need CSS transparency for that.
-      backgroundColor: '#131316',
+      // natively, so we don't need CSS transparency for that. The color tracks
+      // the active theme so there's no wrong-shade flash on load/resize.
+      backgroundColor: windowBackground(),
       // Custom title bar (TitleBar.tsx) replaces the OS chrome — the stock
       // decorations clash with the app's dark theme.
       frame: false,

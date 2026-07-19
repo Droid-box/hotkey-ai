@@ -1,5 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { ChatWindowSize } from '../../preload/shared/types'
+import type { ChatWindowSize, ThemeSetting } from '../../preload/shared/types'
+
+const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
+  { value: 'system', label: 'System' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Light' }
+]
 
 const SIZE_OPTIONS: { value: ChatWindowSize; label: string }[] = [
   { value: 'small', label: 'Small' },
@@ -16,6 +22,7 @@ const opacityToTransparency = (opacity: number): number => Math.round((1 - opaci
 const transparencyToOpacity = (pct: number): number => Number((1 - pct / 100).toFixed(2))
 
 export function SettingsPage() {
+  const [theme, setTheme] = useState<ThemeSetting | null>(null)
   const [size, setSize] = useState<ChatWindowSize | null>(null)
   const [opacity, setOpacity] = useState<number | null>(null)
   const [launchAtStartup, setLaunchAtStartup] = useState<boolean | null>(null)
@@ -37,11 +44,17 @@ export function SettingsPage() {
 
   useEffect(() => {
     window.hotkeyAI.settings.get().then((s) => {
+      setTheme(s.theme)
       setSize(s.chatWindowSize)
       setOpacity(s.chatWindowOpacity)
       setLaunchAtStartup(s.launchAtStartup)
     })
   }, [])
+
+  function chooseTheme(value: ThemeSetting): void {
+    setTheme(value)
+    void window.hotkeyAI.settings.setTheme(value)
+  }
 
   function choose(value: ChatWindowSize): void {
     setSize(value)
@@ -72,6 +85,27 @@ export function SettingsPage() {
       </header>
 
       <div className="card settings-card">
+        <div className="setting-row">
+          <span className="field-label">Theme</span>
+          <div className="segmented" role="radiogroup" aria-label="Theme">
+            {THEME_OPTIONS.map((opt) => {
+              const active = theme === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={`segment ${active ? 'segment-active' : ''}`}
+                  onClick={() => chooseTheme(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="setting-row">
           <span className="field-label">Chat window size</span>
           <div

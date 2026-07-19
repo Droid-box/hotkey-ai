@@ -2,15 +2,18 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IpcChannels } from '../../preload/shared/ipcChannels'
 import type { AppSettings } from '../../preload/shared/types'
-import { ChatWindowOpacitySchema, ChatWindowSizeSchema } from '../store/schema'
+import { ChatWindowOpacitySchema, ChatWindowSizeSchema, ThemeSchema } from '../store/schema'
 import {
   loadSettings,
   setChatWindowOpacity,
   setChatWindowSize,
-  setLaunchAtStartup
+  setLaunchAtStartup,
+  setTheme
 } from '../store/settingsStore'
 import { overlayWindowManager } from '../windows/overlayWindow'
+import { managementWindowManager } from '../windows/managementWindow'
 import { applyLaunchAtStartup } from '../lib/loginItem'
+import { applyThemeSource } from '../lib/theme'
 
 export function registerSettingsIpc(): void {
   ipcMain.handle(IpcChannels.settingsGet, (): AppSettings => loadSettings())
@@ -34,5 +37,14 @@ export function registerSettingsIpc(): void {
     const enabled = z.boolean().parse(rawEnabled)
     setLaunchAtStartup(enabled)
     applyLaunchAtStartup(enabled)
+  })
+
+  ipcMain.handle(IpcChannels.settingsSetTheme, (_event, rawTheme: unknown): void => {
+    const theme = ThemeSchema.parse(rawTheme)
+    setTheme(theme)
+    // Drives prefers-color-scheme in every renderer (CSS re-themes live) and
+    // refreshes the management window's native background.
+    applyThemeSource(theme)
+    managementWindowManager.refreshThemeBackground()
   })
 }

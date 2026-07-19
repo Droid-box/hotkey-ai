@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, Menu } from 'electron'
+import { app, BrowserWindow, clipboard, Menu, nativeTheme } from 'electron'
 import { IpcChannels } from '../preload/shared/ipcChannels'
 import { createTray } from './tray'
 import { managementWindowManager } from './windows/managementWindow'
@@ -13,8 +13,9 @@ import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { assistantStore } from './store/assistantStore'
-import { getLaunchAtStartup } from './store/settingsStore'
+import { getLaunchAtStartup, getTheme } from './store/settingsStore'
 import { applyLaunchAtStartup, wasLaunchedAtStartup } from './lib/loginItem'
+import { applyThemeSource } from './lib/theme'
 import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
@@ -103,6 +104,13 @@ if (!gotSingleInstanceLock) {
     registerModelsIpc()
     registerSettingsIpc()
     registerWindowControlsIpc()
+
+    // Apply the saved theme before any window is created so they open in the
+    // right palette (this sets prefers-color-scheme for every renderer).
+    applyThemeSource(getTheme())
+    // Keep the management window's native background in sync when the OS theme
+    // changes while the user is on 'system'.
+    nativeTheme.on('updated', () => managementWindowManager.refreshThemeBackground())
 
     // Load persisted conversations before the overlay can be summoned.
     conversationCache.init()

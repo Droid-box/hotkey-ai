@@ -3,12 +3,17 @@ export type ProviderId = 'openai' | 'anthropic'
 /** Chat overlay size preset (Settings → Chat Window Size). */
 export type ChatWindowSize = 'small' | 'medium' | 'large'
 
+/** App theme (Settings → Theme). 'system' follows the OS preference. */
+export type ThemeSetting = 'system' | 'dark' | 'light'
+
 export interface AppSettings {
   chatWindowSize: ChatWindowSize
   /** Overlay window opacity, 0.5–1 (1 = fully opaque). */
   chatWindowOpacity: number
   /** Start Hotkey AI automatically when the user signs in to Windows. */
   launchAtStartup: boolean
+  /** Light/dark/system theme applied across every window. */
+  theme: ThemeSetting
 }
 
 export interface Assistant {
@@ -105,6 +110,7 @@ export interface ManagementBridge {
     setChatWindowSize: (size: ChatWindowSize) => Promise<void>
     setChatWindowOpacity: (opacity: number) => Promise<void>
     setLaunchAtStartup: (enabled: boolean) => Promise<void>
+    setTheme: (theme: ThemeSetting) => Promise<void>
   }
   windowControls: {
     minimize: () => void

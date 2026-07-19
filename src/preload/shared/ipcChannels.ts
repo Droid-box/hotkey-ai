@@ -15,6 +15,7 @@ export const IpcChannels = {
   settingsSetChatWindowSize: 'settings:set-chat-window-size',
   settingsSetChatWindowOpacity: 'settings:set-chat-window-opacity',
   settingsSetLaunchAtStartup: 'settings:set-launch-at-startup',
+  settingsSetTheme: 'settings:set-theme',
 
   windowMinimize: 'window:minimize',
   windowToggleMaximize: 'window:toggle-maximize',

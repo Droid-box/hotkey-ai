@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { OverlayApp } from './OverlayApp'
+import '../shared/theme.css'
 import '../shared/chat/chat.css'
 import './overlay.css'
 

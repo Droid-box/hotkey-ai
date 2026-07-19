@@ -1,18 +1,5 @@
-/* Fixed dark theme matching the chat overlay's glass style. */
-:root {
-  --bg: #131316;
-  --surface: #1c1c1f;
-  --surface-hover: #252528;
-  --border: #2c2c30;
-  --text: #f4f4f5;
-  --text-muted: #9f9fa8;
-  --accent: #e4e4e7;
-  --accent-fg: #18181b;
-  --accent-hover: #d4d4d8;
-  --danger: #f87171;
-  --danger-bg: rgba(248, 113, 113, 0.1);
-  --ring: rgba(228, 228, 231, 0.35);
-}
+/* Theme tokens (--bg, --surface, --text, …) live in shared/theme.css, which
+   also provides the light-theme overrides. */
 
 * {
   box-sizing: border-box;
@@ -42,12 +29,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -950,7 +937,7 @@ select.input {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--scrim);
   z-index: 100;
 }
 

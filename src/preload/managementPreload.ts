@@ -17,7 +17,8 @@ import type {
   ResizeEdge,
   ResizePhase,
   ShortcutCheckResult,
-  TestApiKeyResult
+  TestApiKeyResult,
+  ThemeSetting
 } from './shared/types'
 
 function subscribe<T>(channel: string): (callback: (payload: T) => void) => () => void {
@@ -91,7 +92,9 @@ const bridge: ManagementBridge = {
     setChatWindowOpacity: (opacity: number): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.settingsSetChatWindowOpacity, opacity),
     setLaunchAtStartup: (enabled: boolean): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.settingsSetLaunchAtStartup, enabled)
+      ipcRenderer.invoke(IpcChannels.settingsSetLaunchAtStartup, enabled),
+    setTheme: (theme: ThemeSetting): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.settingsSetTheme, theme)
   },
   windowControls: {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),

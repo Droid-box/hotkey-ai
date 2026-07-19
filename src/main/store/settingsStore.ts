@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import type { AppSettings, ChatWindowSize } from '../../preload/shared/types'
+import type { AppSettings, ChatWindowSize, ThemeSetting } from '../../preload/shared/types'
 
 // App-wide preferences (distinct from window-state.json and assistants.json).
 // Defaults are spread over the stored value on load, so a new field like
@@ -8,7 +8,8 @@ import type { AppSettings, ChatWindowSize } from '../../preload/shared/types'
 const DEFAULT_SETTINGS: AppSettings = {
   chatWindowSize: 'small',
   chatWindowOpacity: 1,
-  launchAtStartup: false
+  launchAtStartup: false,
+  theme: 'system'
 }
 
 const store = new Store<{ settings: AppSettings }>({
@@ -42,4 +43,12 @@ export function getLaunchAtStartup(): boolean {
 
 export function setLaunchAtStartup(enabled: boolean): void {
   store.set('settings', { ...loadSettings(), launchAtStartup: enabled })
+}
+
+export function getTheme(): ThemeSetting {
+  return loadSettings().theme
+}
+
+export function setTheme(theme: ThemeSetting): void {
+  store.set('settings', { ...loadSettings(), theme })
 }
