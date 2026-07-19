@@ -12,6 +12,7 @@ import { registerTestChatIpc } from './ipc/testChatIpc'
 import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
+import { initUpdater, registerUpdatesIpc } from './updater'
 import { assistantStore } from './store/assistantStore'
 import { getLaunchAtStartup, getTheme } from './store/settingsStore'
 import { applyLaunchAtStartup, wasLaunchedAtStartup } from './lib/loginItem'
@@ -104,6 +105,7 @@ if (!gotSingleInstanceLock) {
     registerModelsIpc()
     registerSettingsIpc()
     registerWindowControlsIpc()
+    registerUpdatesIpc()
 
     // Apply the saved theme before any window is created so they open in the
     // right palette (this sets prefers-color-scheme for every renderer).
@@ -127,6 +129,8 @@ if (!gotSingleInstanceLock) {
     shortcutManager.watchPowerEvents(shortcutEntries)
 
     createTray()
+    // Start checking for updates (no-op in dev; runs in the installed app).
+    initUpdater()
     // A Windows-startup launch stays in the tray (hotkeys and the overlay are
     // already live); only a manual launch opens the management window. The user
     // can open it anytime from the tray icon.

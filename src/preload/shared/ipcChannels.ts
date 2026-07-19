@@ -16,6 +16,13 @@ export const IpcChannels = {
   settingsSetChatWindowOpacity: 'settings:set-chat-window-opacity',
   settingsSetLaunchAtStartup: 'settings:set-launch-at-startup',
   settingsSetTheme: 'settings:set-theme',
+  settingsSetAutoInstallUpdates: 'settings:set-auto-install-updates',
+
+  updatesGetState: 'updates:get-state',
+  updatesCheck: 'updates:check',
+  updatesDownload: 'updates:download',
+  updatesInstall: 'updates:install',
+  updatesStateChanged: 'updates:state-changed',
 
   windowMinimize: 'window:minimize',
   windowToggleMaximize: 'window:toggle-maximize',

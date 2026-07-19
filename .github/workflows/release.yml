@@ -1,0 +1,33 @@
+name: Release
+
+# Push a version tag (e.g. v1.0.1) to build the Windows installer on a real
+# Windows runner (no wine needed) and upload it — plus latest.yml, which
+# electron-updater reads — to a GitHub Release. electron-builder creates the
+# release as a DRAFT; review it and click "Publish release" to ship the update.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write # allow the built-in token to create the release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # Packages NSIS + portable and uploads them with latest.yml to the
+      # Release for this tag. GITHUB_TOKEN is provided by Actions.
+      - run: npx electron-builder --win --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,24 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { ChatWindowSize, ThemeSetting } from '../../preload/shared/types'
+import type { ChatWindowSize, ThemeSetting, UpdateState } from '../../preload/shared/types'
+
+function updateStatusLabel(s: UpdateState): string {
+  switch (s.status) {
+    case 'dev':
+      return 'Updates run in the installed app'
+    case 'checking':
+      return 'Checking for updates…'
+    case 'available':
+      return `Update available (v${s.newVersion})`
+    case 'downloading':
+      return `Downloading… ${s.percent}%`
+    case 'downloaded':
+      return `Update ready (v${s.newVersion})`
+    case 'error':
+      return 'Update check failed'
+    default:
+      return 'Up to date'
+  }
+}
 
 const THEME_OPTIONS: { value: ThemeSetting; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -26,6 +45,8 @@ export function SettingsPage() {
   const [size, setSize] = useState<ChatWindowSize | null>(null)
   const [opacity, setOpacity] = useState<number | null>(null)
   const [launchAtStartup, setLaunchAtStartup] = useState<boolean | null>(null)
+  const [autoUpdates, setAutoUpdates] = useState<boolean | null>(null)
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null)
 
   // Match the transparency control's width to the size segmented control so
   // their left/right edges line up. Measured (not hardcoded) so it stays exact
@@ -48,12 +69,24 @@ export function SettingsPage() {
       setSize(s.chatWindowSize)
       setOpacity(s.chatWindowOpacity)
       setLaunchAtStartup(s.launchAtStartup)
+      setAutoUpdates(s.autoInstallUpdates)
     })
+  }, [])
+
+  useEffect(() => {
+    window.hotkeyAI.updates.getState().then(setUpdateState)
+    return window.hotkeyAI.updates.onStateChanged(setUpdateState)
   }, [])
 
   function chooseTheme(value: ThemeSetting): void {
     setTheme(value)
     void window.hotkeyAI.settings.setTheme(value)
+  }
+
+  function toggleAutoUpdates(): void {
+    const next = !autoUpdates
+    setAutoUpdates(next)
+    void window.hotkeyAI.settings.setAutoInstallUpdates(next)
   }
 
   function choose(value: ChatWindowSize): void {
@@ -167,7 +200,60 @@ export function SettingsPage() {
             <span className="toggle-knob" />
           </button>
         </div>
+
+        <div className="setting-row">
+          <span className="field-label">Automatically install updates</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoUpdates === true}
+            aria-label="Automatically install updates"
+            disabled={autoUpdates == null}
+            className={`toggle ${autoUpdates ? 'toggle-on' : ''}`}
+            onClick={toggleAutoUpdates}
+          >
+            <span className="toggle-knob" />
+          </button>
+        </div>
+
+        {updateState && (
+          <div className="setting-row">
+            <span className="field-label">Version</span>
+            <div className="update-control">
+              <span className="update-status">
+                v{updateState.currentVersion} · {updateStatusLabel(updateState)}
+              </span>
+              <UpdateAction state={updateState} autoUpdates={autoUpdates === true} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+function UpdateAction({ state, autoUpdates }: { state: UpdateState; autoUpdates: boolean }) {
+  const { updates } = window.hotkeyAI
+  if (state.status === 'downloaded') {
+    return (
+      <button type="button" className="btn btn-secondary btn-sm" onClick={updates.install}>
+        Restart to install
+      </button>
+    )
+  }
+  if (state.status === 'available' && !autoUpdates) {
+    return (
+      <button type="button" className="btn btn-secondary btn-sm" onClick={updates.download}>
+        Download &amp; install
+      </button>
+    )
+  }
+  if (state.status === 'checking' || state.status === 'downloading' || state.status === 'dev') {
+    return null
+  }
+  return (
+    <button type="button" className="btn btn-secondary btn-sm" onClick={updates.check}>
+      {state.status === 'error' ? 'Retry' : 'Check for updates'}
+    </button>
   )
 }

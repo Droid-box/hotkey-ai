@@ -24,3 +24,10 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
+# GitHub Releases is the update feed: the build uploads the installer plus
+# latest.yml here, and electron-updater in the app reads latest.yml from the
+# same public repo (no auth needed).
+publish:
+  provider: github
+  owner: Droid-box
+  repo: hotkey-ai

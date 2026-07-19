@@ -18,7 +18,8 @@ import type {
   ResizePhase,
   ShortcutCheckResult,
   TestApiKeyResult,
-  ThemeSetting
+  ThemeSetting,
+  UpdateState
 } from './shared/types'
 
 function subscribe<T>(channel: string): (callback: (payload: T) => void) => () => void {
@@ -94,7 +95,16 @@ const bridge: ManagementBridge = {
     setLaunchAtStartup: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.settingsSetLaunchAtStartup, enabled),
     setTheme: (theme: ThemeSetting): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.settingsSetTheme, theme)
+      ipcRenderer.invoke(IpcChannels.settingsSetTheme, theme),
+    setAutoInstallUpdates: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.settingsSetAutoInstallUpdates, enabled)
+  },
+  updates: {
+    getState: (): Promise<UpdateState> => ipcRenderer.invoke(IpcChannels.updatesGetState),
+    check: (): void => ipcRenderer.send(IpcChannels.updatesCheck),
+    download: (): void => ipcRenderer.send(IpcChannels.updatesDownload),
+    install: (): void => ipcRenderer.send(IpcChannels.updatesInstall),
+    onStateChanged: subscribe<UpdateState>(IpcChannels.updatesStateChanged)
   },
   windowControls: {
     minimize: (): void => ipcRenderer.send(IpcChannels.windowMinimize),

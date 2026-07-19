@@ -9,7 +9,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   chatWindowSize: 'small',
   chatWindowOpacity: 1,
   launchAtStartup: false,
-  theme: 'system'
+  theme: 'system',
+  autoInstallUpdates: true
 }
 
 const store = new Store<{ settings: AppSettings }>({
@@ -51,4 +52,12 @@ export function getTheme(): ThemeSetting {
 
 export function setTheme(theme: ThemeSetting): void {
   store.set('settings', { ...loadSettings(), theme })
+}
+
+export function getAutoInstallUpdates(): boolean {
+  return loadSettings().autoInstallUpdates
+}
+
+export function setAutoInstallUpdates(enabled: boolean): void {
+  store.set('settings', { ...loadSettings(), autoInstallUpdates: enabled })
 }

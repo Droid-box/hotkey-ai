@@ -14,6 +14,31 @@ export interface AppSettings {
   launchAtStartup: boolean
   /** Light/dark/system theme applied across every window. */
   theme: ThemeSetting
+  /** Download updates automatically in the background (install on restart). */
+  autoInstallUpdates: boolean
+}
+
+/**
+ * Auto-update lifecycle. 'dev' means updates are unavailable (dev run or an
+ * unpacked build); the rest mirror electron-updater's events.
+ */
+export type UpdateStatus =
+  | 'dev'
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'downloaded'
+  | 'not-available'
+  | 'error'
+
+export interface UpdateState {
+  status: UpdateStatus
+  currentVersion: string
+  newVersion: string | null
+  /** Download progress 0–100 while status is 'downloading'. */
+  percent: number
+  error: string | null
 }
 
 export interface Assistant {
@@ -111,6 +136,17 @@ export interface ManagementBridge {
     setChatWindowOpacity: (opacity: number) => Promise<void>
     setLaunchAtStartup: (enabled: boolean) => Promise<void>
     setTheme: (theme: ThemeSetting) => Promise<void>
+    setAutoInstallUpdates: (enabled: boolean) => Promise<void>
+  }
+  updates: {
+    getState: () => Promise<UpdateState>
+    /** Manually check now (also downloads if auto-install is on / when available). */
+    check: () => void
+    /** Download an available update when auto-install is off. */
+    download: () => void
+    /** Quit and install a downloaded update. */
+    install: () => void
+    onStateChanged: (callback: (state: UpdateState) => void) => () => void
   }
   windowControls: {
     minimize: () => void

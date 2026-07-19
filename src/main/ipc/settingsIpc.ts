@@ -5,6 +5,7 @@ import type { AppSettings } from '../../preload/shared/types'
 import { ChatWindowOpacitySchema, ChatWindowSizeSchema, ThemeSchema } from '../store/schema'
 import {
   loadSettings,
+  setAutoInstallUpdates,
   setChatWindowOpacity,
   setChatWindowSize,
   setLaunchAtStartup,
@@ -14,6 +15,7 @@ import { overlayWindowManager } from '../windows/overlayWindow'
 import { managementWindowManager } from '../windows/managementWindow'
 import { applyLaunchAtStartup } from '../lib/loginItem'
 import { applyThemeSource } from '../lib/theme'
+import { setUpdateAutoDownload } from '../updater'
 
 export function registerSettingsIpc(): void {
   ipcMain.handle(IpcChannels.settingsGet, (): AppSettings => loadSettings())
@@ -46,5 +48,11 @@ export function registerSettingsIpc(): void {
     // refreshes the management window's native background.
     applyThemeSource(theme)
     managementWindowManager.refreshThemeBackground()
+  })
+
+  ipcMain.handle(IpcChannels.settingsSetAutoInstallUpdates, (_event, rawEnabled: unknown): void => {
+    const enabled = z.boolean().parse(rawEnabled)
+    setAutoInstallUpdates(enabled)
+    setUpdateAutoDownload(enabled)
   })
 }
