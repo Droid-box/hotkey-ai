@@ -11,11 +11,11 @@ files:
 asarUnpack:
   - resources/**
 win:
+  # NSIS only. A second target (e.g. portable) makes electron-builder publish
+  # twice in one run, and its non-atomic "find-or-create release" then spawns a
+  # duplicate draft each release. NSIS is also the only target that auto-updates.
   target:
     - target: nsis
-      arch:
-        - x64
-    - target: portable
       arch:
         - x64
   icon: build/icon.ico

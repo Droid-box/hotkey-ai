@@ -139,16 +139,19 @@ class ManagementWindowManager {
       }
     })
 
-    // Maximize (for a window restored from a maximized session) only once the
-    // window is created and positioned on its monitor, then show it. Maximizing
-    // at construction — before show — mis-targets the bounds on multi-monitor
-    // setups (it spills onto the neighbouring display). The event handlers below
-    // are attached synchronously, so this fires the 'maximize' handler too.
+    // For a window restored from a maximized session: show it windowed first,
+    // then maximize a beat later. Maximizing a not-yet-on-screen frameless
+    // window mis-sizes it on multi-monitor setups (it spills a border-width
+    // onto the neighbouring display); showing first lets Windows settle the
+    // window on its monitor (and its per-monitor DPI) so maximize targets the
+    // right work area. The brief windowed frame is an acceptable trade for
+    // correct bounds. Handlers below are attached synchronously, so the
+    // deferred maximize still fires the 'maximize' handler.
     this.window.on('ready-to-show', () => {
       const w = this.window
       if (!w) return
-      if (startMaximized) w.maximize()
       w.show()
+      if (startMaximized) setTimeout(() => !w.isDestroyed() && w.maximize(), 80)
     })
 
     // Capture the initial (windowed) bounds before the deferred maximize above.
