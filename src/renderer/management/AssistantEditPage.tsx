@@ -257,8 +257,8 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             <div className="field-toggle-text">
               <span className="field-label">Reset chat on close</span>
               <span className="hint">
-                Clear this assistant&rsquo;s conversation when its window closes, so it starts fresh
-                next time. When off, the history is restored on reopen.
+                Clear the chat when the window closes for a fresh start. Keep the history restored
+                when off.
               </span>
             </div>
             <button

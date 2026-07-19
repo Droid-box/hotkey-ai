@@ -202,12 +202,12 @@ export function SettingsPage() {
         </div>
 
         <div className="setting-row">
-          <span className="field-label">Automatically install updates</span>
+          <span className="field-label">Auto-install updates</span>
           <button
             type="button"
             role="switch"
             aria-checked={autoUpdates === true}
-            aria-label="Automatically install updates"
+            aria-label="Auto-install updates"
             disabled={autoUpdates == null}
             className={`toggle ${autoUpdates ? 'toggle-on' : ''}`}
             onClick={toggleAutoUpdates}
