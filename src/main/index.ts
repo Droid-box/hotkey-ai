@@ -13,7 +13,7 @@ import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { assistantStore } from './store/assistantStore'
 import { getLaunchAtStartup } from './store/settingsStore'
-import { applyLaunchAtStartup } from './lib/loginItem'
+import { applyLaunchAtStartup, wasLaunchedAtStartup } from './lib/loginItem'
 import { shortcutManager } from './shortcuts/shortcutManager'
 import { conversationCache } from './chat/conversationCache'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
@@ -114,7 +114,12 @@ if (!gotSingleInstanceLock) {
     shortcutManager.watchPowerEvents(shortcutEntries)
 
     createTray()
-    managementWindowManager.showOrCreate()
+    // A Windows-startup launch stays in the tray (hotkeys and the overlay are
+    // already live); only a manual launch opens the management window. The user
+    // can open it anytime from the tray icon.
+    if (!wasLaunchedAtStartup()) {
+      managementWindowManager.showOrCreate()
+    }
 
     const rendererUrl = process.env['ELECTRON_RENDERER_URL']
     if (rendererUrl) {
