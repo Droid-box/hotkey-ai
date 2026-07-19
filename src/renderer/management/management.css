@@ -849,13 +849,14 @@ select.input {
 }
 
 /* Assistant editor: two columns — settings on the left, test chat on the
-   right. The test chat sticks in view while the (potentially taller) form
-   scrolls with the page, and scrolls its messages internally. */
+   right — that share one row height. The editor (usually the taller side)
+   drives the height; the test chat fills its card exactly and scrolls its
+   messages internally rather than growing past it. */
 .edit-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .edit-form {
@@ -863,21 +864,19 @@ select.input {
 }
 
 .test-chat-card {
-  position: sticky;
-  top: 16px;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 220px);
-  min-height: 340px;
+  /* Anchor for the absolutely-filled test chat: its content doesn't add to
+     the card's height, so the editor column sets the shared row height and the
+     card just stretches to match. */
+  position: relative;
   min-width: 0;
-  overflow: hidden;
+  min-height: 340px;
 }
 
 .test-chat {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
 }
 
 .test-chat-header {

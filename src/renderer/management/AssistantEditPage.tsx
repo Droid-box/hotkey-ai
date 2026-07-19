@@ -66,6 +66,9 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save assistant')
+    } finally {
+      // Always clear the loading state — the editor now stays mounted after a
+      // successful save (it used to navigate away), so success must reset it too.
       setSaving(false)
     }
   }
