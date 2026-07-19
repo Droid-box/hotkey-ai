@@ -195,8 +195,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             <div className="field-toggle-text">
               <span className="field-label">Prefill with clipboard</span>
               <span className="hint">
-                When summoned, start the message box with whatever you last copied — one keystroke
-                to act on your clipboard.
+                When summoned, the message box shows the last copied text with one keystroke.
               </span>
             </div>
             <button
