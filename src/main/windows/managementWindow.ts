@@ -105,6 +105,7 @@ class ManagementWindowManager {
     }
 
     const state = loadManagementWindowState()
+    const startMaximized = state.isMaximized && process.platform !== 'linux'
     this.window = new BrowserWindow({
       width: state.width,
       height: state.height,
@@ -138,14 +139,20 @@ class ManagementWindowManager {
       }
     })
 
-    this.window.on('ready-to-show', () => this.window?.show())
+    // Maximize (for a window restored from a maximized session) only once the
+    // window is created and positioned on its monitor, then show it. Maximizing
+    // at construction — before show — mis-targets the bounds on multi-monitor
+    // setups (it spills onto the neighbouring display). The event handlers below
+    // are attached synchronously, so this fires the 'maximize' handler too.
+    this.window.on('ready-to-show', () => {
+      const w = this.window
+      if (!w) return
+      if (startMaximized) w.maximize()
+      w.show()
+    })
 
-    // Capture the initial (windowed) bounds before any maximize below.
+    // Capture the initial (windowed) bounds before the deferred maximize above.
     rememberNormalBounds(this.window)
-
-    // Restore a maximized window (native platforms only; Linux uses manual
-    // maximize which stays windowed on launch).
-    if (state.isMaximized && process.platform !== 'linux') this.window.maximize()
 
     // Native maximize/unmaximize (Windows, OS shortcuts) → tell the renderer
     // so it can square the window corners while maximized. The Linux manual
