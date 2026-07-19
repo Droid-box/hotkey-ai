@@ -516,6 +516,28 @@ body.resizing * {
   background: var(--accent-hover);
 }
 
+/* Save button: a fixed min-width wide enough for the spinner + label in every
+   state (Save / Create, with or without the spinner), so entering the loading
+   state never changes its width and Cancel stays put. */
+.btn-save {
+  min-width: 96px;
+}
+
+.btn-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btn-secondary {
   background: var(--surface);
   border-color: var(--border);

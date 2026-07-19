@@ -14,6 +14,35 @@ const PROVIDER_OPTIONS: { id: ProviderId; label: string }[] = [
   { id: 'anthropic', label: 'Anthropic' }
 ]
 
+// Keep the saving spinner visible at least this long so a fast save still
+// registers as feedback rather than a flicker.
+const MIN_SPINNER_MS = 500
+
+// Comparable snapshot of the editable fields — drives the dirty check that
+// enables the Save button. Name/model are trimmed to match what gets saved, so
+// trailing whitespace doesn't read as a change.
+interface Snapshot {
+  name: string
+  systemPrompt: string
+  provider: ProviderId
+  model: string
+  shortcut: string
+  resetChatOnClose: boolean
+  prefillClipboard: boolean
+}
+
+function snapshotOf(a?: Assistant): Snapshot {
+  return {
+    name: (a?.name ?? '').trim(),
+    systemPrompt: a?.systemPrompt ?? '',
+    provider: a?.provider ?? 'openai',
+    model: (a?.model ?? '').trim(),
+    shortcut: a?.shortcut ?? '',
+    resetChatOnClose: a?.resetChatOnClose ?? false,
+    prefillClipboard: a?.prefillClipboard ?? false
+  }
+}
+
 export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [name, setName] = useState(assistant?.name ?? '')
   const [systemPrompt, setSystemPrompt] = useState(assistant?.systemPrompt ?? '')
@@ -24,6 +53,9 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [prefillClipboard, setPrefillClipboard] = useState(assistant?.prefillClipboard ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The last-saved values; the form is "dirty" (Save enabled) when the current
+  // fields differ. Reset on a successful save so Save disables again.
+  const [baseline, setBaseline] = useState<Snapshot>(() => snapshotOf(assistant))
 
   const [models, setModels] = useState<string[]>([])
   const [modelsError, setModelsError] = useState<string | null>(null)
@@ -49,24 +81,47 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
 
   const isValid = name.trim().length > 0 && model.trim().length > 0
 
+  const current: Snapshot = {
+    name: name.trim(),
+    systemPrompt,
+    provider,
+    model: model.trim(),
+    shortcut,
+    resetChatOnClose,
+    prefillClipboard
+  }
+  const dirty =
+    current.name !== baseline.name ||
+    current.systemPrompt !== baseline.systemPrompt ||
+    current.provider !== baseline.provider ||
+    current.model !== baseline.model ||
+    current.shortcut !== baseline.shortcut ||
+    current.resetChatOnClose !== baseline.resetChatOnClose ||
+    current.prefillClipboard !== baseline.prefillClipboard
+
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
-    if (!isValid || saving) return
+    if (!isValid || saving || !dirty) return
     setSaving(true)
     setError(null)
+    const startedAt = Date.now()
     try {
       await onSave({
-        name: name.trim(),
+        name: current.name,
         systemPrompt,
         provider,
-        model: model.trim(),
+        model: current.model,
         shortcut,
         resetChatOnClose,
         prefillClipboard
       })
+      // Saved values are the new baseline: Save disables until the next edit.
+      setBaseline(current)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save assistant')
     } finally {
+      const remaining = MIN_SPINNER_MS - (Date.now() - startedAt)
+      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining))
       // Always clear the loading state — the editor now stays mounted after a
       // successful save (it used to navigate away), so success must reset it too.
       setSaving(false)
@@ -246,8 +301,13 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
           <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary" disabled={!isValid || saving}>
-            {saving ? 'Saving…' : assistant ? 'Save' : 'Create'}
+          <button
+            type="submit"
+            className="btn btn-primary btn-save"
+            disabled={!isValid || saving || !dirty}
+          >
+            {saving && <span className="btn-spinner" aria-hidden="true" />}
+            {assistant ? 'Save' : 'Create'}
           </button>
         </div>
         </form>
