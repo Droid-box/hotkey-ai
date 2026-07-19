@@ -89,6 +89,17 @@ export interface ManagementBridge {
   models: {
     list: (provider: ProviderId) => Promise<ModelListResult>
   }
+  /** Ephemeral test chat for the assistant editor — uses the assistant's saved
+   *  config, never touches its real (persisted) conversation. */
+  testChat: {
+    send: (assistantId: string, messages: ChatMessage[]) => void
+    abort: (assistantId: string) => void
+    onStreamChunk: (callback: (payload: ChatStreamChunk) => void) => () => void
+    onStreamEnd: (callback: (payload: ChatStreamEnd) => void) => () => void
+    onStreamError: (callback: (payload: ChatStreamError) => void) => () => void
+  }
+  /** Copy text to the clipboard (message/code copy buttons). */
+  copyText: (text: string) => void
   settings: {
     get: () => Promise<AppSettings>
     setChatWindowSize: (size: ChatWindowSize) => Promise<void>

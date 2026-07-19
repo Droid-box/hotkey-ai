@@ -48,12 +48,14 @@ export function ManagementApp() {
   )
 
   async function handleSave(input: AssistantInput): Promise<void> {
-    if (view.type === 'edit' && view.assistant) {
-      await window.hotkeyAI.assistants.update(view.assistant.id, input)
-    } else {
-      await window.hotkeyAI.assistants.create(input)
-    }
-    setView({ type: 'list' })
+    // Stay in the editor after saving (rather than returning to the list) so
+    // the test chat keeps its place and picks up the newly-saved config. A
+    // freshly-created assistant transitions to edit mode so it gains an id.
+    const saved =
+      view.type === 'edit' && view.assistant
+        ? await window.hotkeyAI.assistants.update(view.assistant.id, input)
+        : await window.hotkeyAI.assistants.create(input)
+    setView({ type: 'edit', assistant: saved })
   }
 
   async function handleDelete(id: string): Promise<void> {

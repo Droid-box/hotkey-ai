@@ -8,6 +8,7 @@ import { registerOverlayIpc } from './ipc/overlayIpc'
 import { registerShortcutsIpc } from './ipc/shortcutsIpc'
 import { registerSecretsIpc } from './ipc/secretsIpc'
 import { registerChatIpc, resetConversation } from './ipc/chatIpc'
+import { registerTestChatIpc } from './ipc/testChatIpc'
 import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
@@ -98,6 +99,7 @@ if (!gotSingleInstanceLock) {
     registerShortcutsIpc(assistantStore)
     registerSecretsIpc()
     registerChatIpc(assistantStore)
+    registerTestChatIpc(assistantStore)
     registerModelsIpc()
     registerSettingsIpc()
     registerWindowControlsIpc()

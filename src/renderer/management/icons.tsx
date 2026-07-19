@@ -16,6 +16,21 @@ export function PlusIcon() {
   )
 }
 
+export function RefreshIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M13 8a5 5 0 1 1-1.46-3.54M13 2v3h-3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function WarningIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">

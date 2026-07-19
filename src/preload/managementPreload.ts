@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { clipboard, contextBridge, ipcRenderer } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
   ApiKeyInfo,
@@ -6,6 +6,10 @@ import type {
   AppSettings,
   Assistant,
   AssistantInput,
+  ChatMessage,
+  ChatStreamChunk,
+  ChatStreamEnd,
+  ChatStreamError,
   ChatWindowSize,
   ManagementBridge,
   ModelListResult,
@@ -15,6 +19,14 @@ import type {
   ShortcutCheckResult,
   TestApiKeyResult
 } from './shared/types'
+
+function subscribe<T>(channel: string): (callback: (payload: T) => void) => () => void {
+  return (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, payload: T): void => callback(payload)
+    ipcRenderer.on(channel, listener)
+    return () => ipcRenderer.removeListener(channel, listener)
+  }
+}
 
 const bridge: ManagementBridge = {
   appName: 'Hotkey AI',
@@ -62,6 +74,16 @@ const bridge: ManagementBridge = {
     list: (provider: ProviderId): Promise<ModelListResult> =>
       ipcRenderer.invoke(IpcChannels.modelsList, provider)
   },
+  testChat: {
+    send: (assistantId: string, messages: ChatMessage[]): void =>
+      ipcRenderer.send(IpcChannels.testChatSend, { assistantId, messages }),
+    abort: (assistantId: string): void =>
+      ipcRenderer.send(IpcChannels.testChatAbort, { assistantId }),
+    onStreamChunk: subscribe<ChatStreamChunk>(IpcChannels.testChatStreamChunk),
+    onStreamEnd: subscribe<ChatStreamEnd>(IpcChannels.testChatStreamEnd),
+    onStreamError: subscribe<ChatStreamError>(IpcChannels.testChatStreamError)
+  },
+  copyText: (text: string): void => clipboard.writeText(text),
   settings: {
     get: (): Promise<AppSettings> => ipcRenderer.invoke(IpcChannels.settingsGet),
     setChatWindowSize: (size: ChatWindowSize): Promise<void> =>

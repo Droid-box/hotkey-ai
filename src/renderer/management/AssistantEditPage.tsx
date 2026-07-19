@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Assistant, AssistantInput, ProviderId } from '../../preload/shared/types'
 import { ShortcutRecorder } from './ShortcutRecorder'
+import { TestChatPanel } from './TestChatPanel'
 
 interface Props {
   assistant?: Assistant
@@ -70,7 +71,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   }
 
   return (
-    <div className="page page-narrow">
+    <div className="page edit-page">
       <header className="page-header">
         <div>
           <h1 className="page-title">{assistant ? 'Edit assistant' : 'New assistant'}</h1>
@@ -82,7 +83,8 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         </div>
       </header>
 
-      <form className="card form" onSubmit={handleSubmit}>
+      <div className="edit-layout">
+        <form className="card form edit-form" onSubmit={handleSubmit}>
         <div className="field">
           <label className="field-label" htmlFor="assistant-name">
             Name
@@ -245,7 +247,12 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             {saving ? 'Saving…' : assistant ? 'Save' : 'Create'}
           </button>
         </div>
-      </form>
+        </form>
+
+        <div className="card test-chat-card">
+          <TestChatPanel assistantId={assistant?.id ?? null} assistantName={assistant?.name ?? ''} />
+        </div>
+      </div>
     </div>
   )
 }

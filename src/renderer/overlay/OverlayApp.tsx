@@ -1,11 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { ChatMessage, OverlayConfigurePayload } from '../../preload/shared/types'
-import { ChatMarkdown } from './ChatMarkdown'
-
-interface DisplayMessage extends ChatMessage {
-  error?: boolean
-  errorAction?: 'add-api-key'
-}
+import type { OverlayConfigurePayload } from '../../preload/shared/types'
+import { CopyTextProvider } from '../shared/chat/CopyText'
+import { MessageBubble, type DisplayMessage } from '../shared/chat/MessageBubble'
+import { Composer } from '../shared/chat/Composer'
 
 // Classic thumbtack: round head + shaft + needle point. Filled when pinned.
 function PinIcon({ filled }: { filled: boolean }) {
@@ -19,110 +16,8 @@ function PinIcon({ filled }: { filled: boolean }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path
-        d="M12 17v5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-      />
+      <path d="M12 17v5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
     </svg>
-  )
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function handleCopy(): void {
-    window.hotkeyAI.copyText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  return (
-    <button
-      className={`msg-copy ${copied ? 'msg-copy-done' : ''}`}
-      onClick={handleCopy}
-      aria-label="Copy message"
-      title={copied ? 'Copied' : 'Copy message'}
-    >
-      {copied ? (
-        <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
-          <path
-            d="M2.5 7.5 6 11l5.5-7.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ) : (
-        <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
-          <rect
-            x="5"
-            y="5"
-            width="7.5"
-            height="7.5"
-            rx="1.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.3"
-          />
-          <path
-            d="M9.5 2.75H3.75c-.55 0-1 .45-1 1V9.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-    </button>
-  )
-}
-
-function MessageBubble({
-  message,
-  streaming,
-  onRetry
-}: {
-  message: DisplayMessage
-  streaming: boolean
-  onRetry: () => void
-}) {
-  const isUser = message.role === 'user'
-  return (
-    <div className={`msg-row ${isUser ? 'msg-row-user' : ''}`}>
-      <div
-        className={`msg ${isUser ? 'msg-user' : 'msg-assistant'} ${message.error ? 'msg-error' : ''}`}
-      >
-        {message.error ? (
-          <>
-            <span>{message.content}</span>
-            <div className="msg-error-actions">
-              {message.errorAction === 'add-api-key' ? (
-                <button className="msg-error-btn" onClick={() => window.hotkeyAI.openApiKeys()}>
-                  Open API keys
-                </button>
-              ) : (
-                <button className="msg-error-btn" onClick={onRetry}>
-                  Retry
-                </button>
-              )}
-            </div>
-          </>
-        ) : isUser ? (
-          message.content
-        ) : (
-          <div className="msg-markdown">
-            <ChatMarkdown>{message.content}</ChatMarkdown>
-            {streaming && <span className="cursor" />}
-          </div>
-        )}
-      </div>
-      {!streaming && !message.error && <CopyButton text={message.content} />}
-    </div>
   )
 }
 
@@ -204,16 +99,6 @@ export function OverlayApp() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages])
 
-  // Single line by default; grow with content up to a cap, then scroll.
-  const MAX_INPUT_HEIGHT = 140
-  useLayoutEffect(() => {
-    const ta = inputRef.current
-    if (!ta) return
-    ta.style.height = 'auto'
-    ta.style.height = `${Math.min(ta.scrollHeight, MAX_INPUT_HEIGHT)}px`
-    ta.style.overflowY = ta.scrollHeight > MAX_INPUT_HEIGHT ? 'auto' : 'hidden'
-  }, [draft])
-
   // Fit the window to its content: header + conversation + input. The main
   // process clamps between compact (input-only) and max height, so the
   // overlay opens small and grows with the conversation.
@@ -261,130 +146,95 @@ export function OverlayApp() {
   }
 
   return (
-    <div className="overlay">
-      <header className="overlay-header" ref={headerRef}>
-        <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
-        {assistant && (
-          <span className="overlay-badge">
-            {assistant.provider}/{assistant.model}
-          </span>
-        )}
-        <div className="overlay-actions">
-          {assistant && messages.length > 0 && (
+    <CopyTextProvider value={window.hotkeyAI.copyText}>
+      <div className="overlay">
+        <header className="overlay-header" ref={headerRef}>
+          <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
+          {assistant && (
+            <span className="overlay-badge">
+              {assistant.provider}/{assistant.model}
+            </span>
+          )}
+          <div className="overlay-actions">
+            {assistant && messages.length > 0 && (
+              <button
+                className="overlay-action"
+                onClick={newChat}
+                aria-label="Start a new chat"
+                title="New chat"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                  <path
+                    d="M7 1.5v11M1.5 7h11"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            )}
             <button
-              className="overlay-action"
-              onClick={newChat}
-              aria-label="Start a new chat"
-              title="New chat"
+              className={`overlay-action ${pinned ? 'overlay-action-active' : ''}`}
+              onClick={togglePin}
+              aria-label={pinned ? 'Unpin overlay' : 'Pin overlay'}
+              aria-pressed={pinned}
+              title={pinned ? 'Unpin (auto-hides on click away)' : 'Pin (stays open on click away)'}
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                <path
-                  d="M7 1.5v11M1.5 7h11"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <PinIcon filled={pinned} />
             </button>
-          )}
-          <button
-            className={`overlay-action ${pinned ? 'overlay-action-active' : ''}`}
-            onClick={togglePin}
-            aria-label={pinned ? 'Unpin overlay' : 'Pin overlay'}
-            aria-pressed={pinned}
-            title={pinned ? 'Unpin (auto-hides on click away)' : 'Pin (stays open on click away)'}
-          >
-            <PinIcon filled={pinned} />
-          </button>
-          <button
-            className="overlay-close"
-            onClick={() => window.hotkeyAI.close()}
-            aria-label="Close overlay"
-          >
-            &times;
-          </button>
-        </div>
-      </header>
-
-      {assistant ? (
-        <>
-          {messages.length > 0 && (
-            <div className="chat-messages" ref={scrollRef}>
-              {messages.map((message, i) => (
-                <MessageBubble
-                  key={i}
-                  message={message}
-                  onRetry={retry}
-                  streaming={
-                    streaming && i === messages.length - 1 && message.role === 'assistant'
-                  }
-                />
-              ))}
-              {streaming && messages[messages.length - 1]?.role === 'user' && (
-                <div className="msg msg-assistant msg-pending">
-                  <span className="cursor" />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="chat-input-area" ref={inputAreaRef}>
-            <div className="chat-inputbox">
-              <textarea
-                ref={inputRef}
-                className="chat-input"
-                value={draft}
-                rows={1}
-                placeholder={`Message ${assistant.name}…`}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    send()
-                  }
-                }}
-              />
-              {streaming ? (
-                <button
-                  className="chat-send-icon"
-                  onClick={() => assistant && window.hotkeyAI.abort(assistant.id)}
-                  aria-label="Stop response"
-                  title="Stop"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                    <rect x="1" y="1" width="10" height="10" rx="2" fill="currentColor" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  className="chat-send-icon"
-                  onClick={send}
-                  disabled={!draft.trim()}
-                  aria-label="Send message"
-                  title="Send"
-                >
-                  <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-                    <path
-                      d="M8 13.5V2.5M8 2.5 3 7.5M8 2.5l5 5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
+            <button
+              className="overlay-close"
+              onClick={() => window.hotkeyAI.close()}
+              aria-label="Close overlay"
+            >
+              &times;
+            </button>
           </div>
-        </>
-      ) : (
-        <div className="overlay-body">
-          {configured
-            ? 'No assistants yet. Open the Hotkey AI window from the tray icon and create one first.'
-            : 'Waiting for an assistant to be configured…'}
-        </div>
-      )}
-    </div>
+        </header>
+
+        {assistant ? (
+          <>
+            {messages.length > 0 && (
+              <div className="chat-messages" ref={scrollRef}>
+                {messages.map((message, i) => (
+                  <MessageBubble
+                    key={i}
+                    message={message}
+                    onRetry={retry}
+                    onOpenApiKeys={() => window.hotkeyAI.openApiKeys()}
+                    streaming={
+                      streaming && i === messages.length - 1 && message.role === 'assistant'
+                    }
+                  />
+                ))}
+                {streaming && messages[messages.length - 1]?.role === 'user' && (
+                  <div className="msg msg-assistant msg-pending">
+                    <span className="cursor" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="chat-input-area" ref={inputAreaRef}>
+              <Composer
+                value={draft}
+                onChange={setDraft}
+                onSubmit={send}
+                onStop={() => assistant && window.hotkeyAI.abort(assistant.id)}
+                streaming={streaming}
+                placeholder={`Message ${assistant.name}…`}
+                inputRef={inputRef}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="overlay-body">
+            {configured
+              ? 'No assistants yet. Open the Hotkey AI window from the tray icon and create one first.'
+              : 'Waiting for an assistant to be configured…'}
+          </div>
+        )}
+      </div>
+    </CopyTextProvider>
   )
 }

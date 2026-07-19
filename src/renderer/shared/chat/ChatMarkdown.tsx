@@ -2,6 +2,7 @@ import { createContext, useContext, useRef, useState, type ReactNode } from 'rea
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import { useCopyText } from './CopyText'
 
 // react-markdown v10 dropped the `inline` prop on the code component, so we
 // signal "this <code> is inside a fenced block" via context set by the `pre`
@@ -10,9 +11,10 @@ const InsidePre = createContext(false)
 
 // Icon-only copy button, matching the message-level copy control.
 function CodeCopyButton({ getText }: { getText: () => string }) {
+  const copyText = useCopyText()
   const [copied, setCopied] = useState(false)
   function handleCopy(): void {
-    window.hotkeyAI.copyText(getText())
+    copyText(getText())
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -111,7 +113,7 @@ export function ChatMarkdown({ children }: { children: string }) {
       components={{
         pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
         code: InlineOrBlockCode,
-        // Links open in the default browser (handled by the overlay window's
+        // Links open in the default browser (handled by each window's
         // will-navigate/window-open handlers); mark them safe.
         a: ({ children, node: _node, ...props }) => (
           <a {...props} target="_blank" rel="noreferrer noopener">

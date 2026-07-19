@@ -848,6 +848,79 @@ select.input {
   margin-top: 4px;
 }
 
+/* Assistant editor: two columns — settings on the left, test chat on the
+   right. The test chat sticks in view while the (potentially taller) form
+   scrolls with the page, and scrolls its messages internally. */
+.edit-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.edit-form {
+  min-width: 0;
+}
+
+.test-chat-card {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 220px);
+  min-height: 340px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.test-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.test-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.test-chat-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.test-chat-messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.test-chat-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.test-chat-input-area {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
 /* Modal */
 
 .modal-backdrop {

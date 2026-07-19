@@ -41,5 +41,13 @@ export const IpcChannels = {
   chatReset: 'chat:reset',
   chatStreamChunk: 'chat:stream-chunk',
   chatStreamEnd: 'chat:stream-end',
-  chatStreamError: 'chat:stream-error'
+  chatStreamError: 'chat:stream-error',
+
+  // Assistant-editor test chat: same provider streaming, but an ephemeral
+  // conversation (owned by the renderer) that never touches saved history.
+  testChatSend: 'test-chat:send',
+  testChatAbort: 'test-chat:abort',
+  testChatStreamChunk: 'test-chat:stream-chunk',
+  testChatStreamEnd: 'test-chat:stream-end',
+  testChatStreamError: 'test-chat:stream-error'
 } as const
