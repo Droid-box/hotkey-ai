@@ -11,6 +11,7 @@ const sampleInput: AssistantInput = {
   provider: 'openai',
   model: 'gpt-5',
   shortcut: '',
+  resetChatOnClose: false,
   prefillClipboard: false
 }
 

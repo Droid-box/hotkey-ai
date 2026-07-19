@@ -19,6 +19,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
   const [provider, setProvider] = useState<ProviderId>(assistant?.provider ?? 'openai')
   const [model, setModel] = useState(assistant?.model ?? '')
   const [shortcut, setShortcut] = useState(assistant?.shortcut ?? '')
+  const [resetChatOnClose, setResetChatOnClose] = useState(assistant?.resetChatOnClose ?? false)
   const [prefillClipboard, setPrefillClipboard] = useState(assistant?.prefillClipboard ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +60,7 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
         provider,
         model: model.trim(),
         shortcut,
+        resetChatOnClose,
         prefillClipboard
       })
     } catch (err) {
@@ -188,6 +190,28 @@ export function AssistantEditPage({ assistant, onSave, onCancel }: Props) {
             Summons this assistant from anywhere on your desktop, even while other apps are
             focused.
           </span>
+        </div>
+
+        <div className="field">
+          <div className="field-toggle-row">
+            <div className="field-toggle-text">
+              <span className="field-label">Reset chat on close</span>
+              <span className="hint">
+                Clear this assistant&rsquo;s conversation when its window closes, so it starts fresh
+                next time. When off, the history is restored on reopen.
+              </span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={resetChatOnClose}
+              aria-label="Reset chat on close"
+              className={`toggle ${resetChatOnClose ? 'toggle-on' : ''}`}
+              onClick={() => setResetChatOnClose(!resetChatOnClose)}
+            >
+              <span className="toggle-knob" />
+            </button>
+          </div>
         </div>
 
         <div className="field">

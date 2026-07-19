@@ -18,6 +18,9 @@ export interface Assistant {
   provider: ProviderId
   model: string
   shortcut: string
+  /** Clear this assistant's conversation when its overlay is closed, so it
+   *  starts a fresh chat next time instead of restoring history. */
+  resetChatOnClose: boolean
   /** Pre-fill the overlay input with the clipboard contents when summoned. */
   prefillClipboard: boolean
   createdAt: string

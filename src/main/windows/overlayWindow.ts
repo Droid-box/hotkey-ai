@@ -32,6 +32,11 @@ class OverlayWindowManager {
   private pendingPayload: OverlayConfigurePayload | null = null
   private currentAssistantId: string | null = null
   private pinned = false
+  // Whether the currently-shown assistant clears its history when the overlay
+  // closes, plus the callback that performs the reset (wired in index.ts to
+  // avoid this window manager depending on the chat internals).
+  private resetOnClose = false
+  private onCloseReset: ((assistantId: string) => void) | null = null
   // Bounds are composed from a fixed bottom edge, the content height, and a
   // transient open-animation slide offset, so the open slide and content
   // resize can run together without fighting over the window's y/height.
@@ -58,6 +63,10 @@ class OverlayWindowManager {
     const win = this.window
     if (!win || win.isDestroyed()) return
     win.setOpacity(getChatWindowOpacity())
+  }
+
+  setOnCloseReset(callback: (assistantId: string) => void): void {
+    this.onCloseReset = callback
   }
 
   // Created once at startup and reused for every assistant — cheaper than a
@@ -99,6 +108,15 @@ class OverlayWindowManager {
       this.window.hide()
     })
 
+    // Fires for every dismiss path (blur, Escape, close button, IPC). If the
+    // shown assistant opted into "reset chat on close", wipe its conversation
+    // so the next summon starts fresh.
+    this.window.on('hide', () => {
+      if (this.resetOnClose && this.currentAssistantId) {
+        this.onCloseReset?.(this.currentAssistantId)
+      }
+    })
+
     this.window.webContents.on('did-finish-load', () => {
       this.rendererReady = true
       if (this.pendingPayload) this.sendConfigure(this.pendingPayload)
@@ -136,13 +154,18 @@ class OverlayWindowManager {
   }
 
   // Caller supplies everything but `pinned`/`justOpened`, which are owned
-  // here (reset/derived on a fresh summon).
-  showFor(payload: Omit<OverlayConfigurePayload, 'pinned' | 'justOpened'>): void {
+  // here (reset/derived on a fresh summon). `resetOnClose` is a main-only flag
+  // (kept out of the renderer payload) that drives the hide handler above.
+  showFor(
+    payload: Omit<OverlayConfigurePayload, 'pinned' | 'justOpened'>,
+    resetOnClose: boolean
+  ): void {
     if (!this.window || this.window.isDestroyed()) this.create()
     const win = this.window
     if (!win) return
 
     this.currentAssistantId = payload.assistant?.id ?? null
+    this.resetOnClose = resetOnClose
 
     // "Fresh" = the window was hidden. Only then do we (re)place it at the
     // bottom-center of the cursor's monitor and play the slide-up open

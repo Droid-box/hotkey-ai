@@ -49,7 +49,7 @@ function openAssistantOverlay(assistantId: string): void {
     // Stage the clipboard in the input when the assistant opts in, so its
     // hotkey acts on whatever the user just copied.
     prefill: assistant.prefillClipboard ? clipboard.readText() : undefined
-  })
+  }, !!assistant.resetChatOnClose)
 }
 
 // Each assistant with a recorded shortcut gets its own global registration;
@@ -110,6 +110,9 @@ if (!gotSingleInstanceLock) {
     applyLaunchAtStartup(getLaunchAtStartup())
 
     overlayWindowManager.create()
+    // Assistants with "reset chat on close" wipe their conversation when the
+    // overlay is dismissed; the window manager fires this on hide.
+    overlayWindowManager.setOnCloseReset(resetConversation)
     syncShortcuts()
     shortcutManager.watchPowerEvents(shortcutEntries)
 
