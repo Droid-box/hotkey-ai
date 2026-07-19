@@ -1,9 +1,9 @@
 name: Release
 
-# Push a version tag (e.g. v1.0.1) to build the Windows installer on a real
+# Push a version tag (e.g. v1.0.4) to build the Windows installer on a real
 # Windows runner (no wine needed) and upload it — plus latest.yml, which
-# electron-updater reads — to a GitHub Release. electron-builder creates the
-# release as a DRAFT; review it and click "Publish release" to ship the update.
+# electron-updater reads — to a single DRAFT GitHub Release. Review it and
+# click "Publish release" to ship the update.
 on:
   push:
     tags:
@@ -26,8 +26,20 @@ jobs:
 
       - run: npm run build
 
-      # Packages NSIS + portable and uploads them with latest.yml to the
-      # Release for this tag. GITHUB_TOKEN is provided by Actions.
-      - run: npx electron-builder --win --publish always
+      # Build the installer + update metadata WITHOUT publishing. electron-
+      # builder's own GitHub publisher races when creating the draft (each
+      # uploaded file can spawn its own draft), so we build here and publish
+      # once, atomically, below.
+      - run: npx electron-builder --win --publish never
+
+      # Create ONE draft release with all artifacts in a single call.
+      - name: Create draft release
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            dist/*.exe dist/*.blockmap dist/latest.yml \
+            --draft \
+            --title "${{ github.ref_name }}" \
+            --notes "Automated build of ${{ github.ref_name }}."
