@@ -44,7 +44,7 @@ Run a single test: `npx vitest run tests/unit/accelerator.test.ts` (or `npx vite
 
 The dev environment is WSL2/WSLg. These require a **real Windows** build to verify and cannot be tested under WSLg: global hotkey capture from other apps, always-on-top/focus-stealing, native window maximize/drag/double-click, `safeStorage`/DPAPI, transparency/`setOpacity` (a no-op on Linux), and multi-monitor DPI. Platform-specific branches guard this — e.g. `windowControlsIpc.ts` uses a **manual** maximize/resize path on Linux (`process.platform === 'linux'`) because WSLg mis-places frameless windows and renders resize-grab margins as visible bands; the overlay uses software rendering (`disableHardwareAcceleration`) on Linux.
 
-**Established Windows test loop:** `npm run build && npx electron-builder --win --dir`, then copy `dist/win-unpacked/*` to `C:\Users\Jorelle Castillo\HotkeyAI-test\` (stop any running `Hotkey AI.exe` first) for the user to test.
+**Windows distribution/testing:** the app ships and self-updates via GitHub Releases (electron-updater). Cut a release by bumping the version and pushing a `v*` tag — GitHub Actions builds the NSIS installer on a Windows runner (WSL can't build NSIS: no wine) and uploads a draft release that must be published. For a quick local check without a release, `npm run build && npx electron-builder --win --dir` produces `dist/win-unpacked/` to run on a Windows machine.
 
 **Headless verification under WSLg** (for renderer/IPC/store logic — not native behavior): launch dev with debuggers exposed and drive via Chrome DevTools Protocol:
 ```bash
