@@ -61,6 +61,20 @@ function TrashIcon() {
   )
 }
 
+function XIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M4 4l8 8M12 4l-8 8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diffMs / 60000)
@@ -300,33 +314,29 @@ export function OverlayApp() {
                     >
                       <TrashIcon />
                     </button>
-                    <button className="history-text-btn" onClick={exitSelectMode} title="Cancel">
-                      Cancel
+                    <button
+                      className="overlay-action"
+                      onClick={exitSelectMode}
+                      aria-label="Cancel selection"
+                      title="Cancel"
+                    >
+                      <XIcon />
                     </button>
                   </div>
                 </>
               ) : (
                 <>
                   <span className="history-title">History</span>
-                  <div className="history-header-actions">
-                    {conversations.length > 0 && (
-                      <button
-                        className="history-text-btn"
-                        onClick={() => setSelectMode(true)}
-                        title="Select chats to delete"
-                      >
-                        Select
-                      </button>
-                    )}
+                  {conversations.length > 0 && (
                     <button
                       className="overlay-action"
-                      onClick={newChat}
-                      aria-label="Start a new chat"
-                      title="New chat"
+                      onClick={() => setSelectMode(true)}
+                      aria-label="Select chats to delete"
+                      title="Select chats to delete"
                     >
-                      <PlusIcon />
+                      <TrashIcon />
                     </button>
-                  </div>
+                  )}
                 </>
               )}
             </div>
@@ -389,7 +399,9 @@ export function OverlayApp() {
 
         <div className="overlay-main">
           <header className="overlay-header" ref={headerRef}>
-            <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
+            <span className="overlay-title" title={assistant?.name ?? 'Hotkey AI'}>
+              {assistant?.name ?? 'Hotkey AI'}
+            </span>
             {assistant && (
               <span className="overlay-badge">
                 {assistant.provider}/{assistant.model}

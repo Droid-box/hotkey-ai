@@ -86,7 +86,11 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 8px 10px 14px;
+  /* Match .overlay-header's vertical padding + min-height so the sidebar and
+     main-column title-bar separators sit on the same line (even when the
+     sidebar header is just the "History" label with no chats yet). */
+  min-height: 51px;
+  padding: 12px 8px 12px 14px;
   border-bottom: 1px solid var(--hairline);
   -webkit-app-region: drag;
   user-select: none;
@@ -109,23 +113,6 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-/* Small text buttons in the sidebar header (Select / Cancel). */
-.history-text-btn {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.history-text-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text);
 }
 
 /* "Select all" toggle + live count on the left of the select-mode header. */
@@ -267,6 +254,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 51px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--hairline);
   /* Frameless window: the header doubles as the drag handle. */
