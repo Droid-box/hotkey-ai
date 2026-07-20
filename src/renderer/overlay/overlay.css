@@ -269,6 +269,10 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Opt out of the header's drag region so hovering a truncated name fires
+     the native title tooltip (a drag region swallows mouse/hover events, which
+     is why the no-drag action buttons get tooltips but the name did not). */
+  -webkit-app-region: no-drag;
 }
 
 .overlay-badge {

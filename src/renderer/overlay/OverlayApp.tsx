@@ -46,9 +46,9 @@ function PlusIcon() {
   )
 }
 
-function TrashIcon() {
+function TrashIcon({ size = 13 }: { size?: number }) {
   return (
-    <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
       <path
         d="M2.5 4h11M6 4V2.75h4V4M4 4l.5 9h7l.5-9M6.5 6.5v4M9.5 6.5v4"
         fill="none"
@@ -61,9 +61,9 @@ function TrashIcon() {
   )
 }
 
-function XIcon() {
+function XIcon({ size = 15 }: { size?: number }) {
   return (
-    <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
       <path
         d="M4 4l8 8M12 4l-8 8"
         fill="none"
@@ -312,7 +312,7 @@ export function OverlayApp() {
                       aria-label={`Delete ${selectedIds.size} selected chats`}
                       title="Delete selected"
                     >
-                      <TrashIcon />
+                      <TrashIcon size={15} />
                     </button>
                     <button
                       className="overlay-action"
@@ -334,7 +334,7 @@ export function OverlayApp() {
                       aria-label="Select chats to delete"
                       title="Select chats to delete"
                     >
-                      <TrashIcon />
+                      <TrashIcon size={15} />
                     </button>
                   )}
                 </>
