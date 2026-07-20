@@ -284,14 +284,26 @@ body {
 
 /* Chat */
 
+/* Scroll viewport. The inner list holds the messages at their natural height
+   (measured for window sizing); this container stretches to a taller window
+   while history is open without inflating that measurement. */
 .chat-messages {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chat-messages-list {
+  /* Keep the list at its natural height (don't let the flex parent shrink it),
+     so it can be measured for window sizing and overflows into a scroll. */
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 

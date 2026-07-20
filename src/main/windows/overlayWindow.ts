@@ -174,16 +174,20 @@ class OverlayWindowManager {
     this.currentAssistantId = payload.assistant?.id ?? null
     this.resetOnClose = resetOnClose
 
+    // Any summon (fresh or a switch to another assistant while visible) closes
+    // the history sidebar; remember if it was open to revert the widened bounds.
+    const wasHistoryOpen = this.historyOpen
+    this.historyOpen = false
+
     // "Fresh" = the window was hidden. Only then do we (re)place it at the
     // bottom-center of the cursor's monitor and play the slide-up open
     // animation; a re-summon while already visible (new chat / assistant
     // switch) keeps its current position and doesn't animate.
     const fresh = !win.isVisible()
     if (fresh) {
-      // Fresh summon: pin defaults off so click-away dismisses as usual,
-      // history starts collapsed, and pick up any chat-window-size change.
+      // Fresh summon: pin defaults off so click-away dismisses as usual, and
+      // pick up any chat-window-size change.
       this.pinned = false
-      this.historyOpen = false
       this.applyChatWindowSize()
       const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
       this.overlayX = Math.round(workArea.x + (workArea.width - this.overlayWidth) / 2)
@@ -192,6 +196,10 @@ class OverlayWindowManager {
       this.slideOffset = OPEN_SLIDE_PX
       // Position the window at its start (low) spot before showing, so it
       // never flashes at its final position for a frame.
+      this.applyOverlayBounds()
+    } else if (wasHistoryOpen) {
+      // Switched assistants while the sidebar was open: collapse to the normal
+      // width now (the renderer re-measures the new thread's height next).
       this.applyOverlayBounds()
     }
 

@@ -87,6 +87,7 @@ export function OverlayApp() {
   const assistantIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const messagesListRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const inputAreaRef = useRef<HTMLDivElement>(null)
 
@@ -170,7 +171,10 @@ export function OverlayApp() {
   useLayoutEffect(() => {
     const headerHeight = headerRef.current?.offsetHeight ?? 0
     const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
-    const messagesHeight = messages.length > 0 ? (scrollRef.current?.scrollHeight ?? 0) : 0
+    // Measure the inner list's NATURAL height, not the scroll container — the
+    // container is flex:1 and stretches to a taller window (while history is
+    // open), which would otherwise be mistaken for the content height.
+    const messagesHeight = messages.length > 0 ? (messagesListRef.current?.offsetHeight ?? 0) : 0
     const noAssistantHeight = assistant ? 0 : 80
     window.hotkeyAI.resizeContent(headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2)
   }, [assistant, messages, draft, streaming, historyOpen])
@@ -336,22 +340,24 @@ export function OverlayApp() {
             <>
               {(messages.length > 0 || historyOpen) && (
                 <div className="chat-messages" ref={scrollRef}>
-                  {messages.map((message, i) => (
-                    <MessageBubble
-                      key={i}
-                      message={message}
-                      onRetry={retry}
-                      onOpenApiKeys={() => window.hotkeyAI.openApiKeys()}
-                      streaming={
-                        streaming && i === messages.length - 1 && message.role === 'assistant'
-                      }
-                    />
-                  ))}
-                  {streaming && messages[messages.length - 1]?.role === 'user' && (
-                    <div className="msg msg-assistant msg-pending">
-                      <span className="cursor" />
-                    </div>
-                  )}
+                  <div className="chat-messages-list" ref={messagesListRef}>
+                    {messages.map((message, i) => (
+                      <MessageBubble
+                        key={i}
+                        message={message}
+                        onRetry={retry}
+                        onOpenApiKeys={() => window.hotkeyAI.openApiKeys()}
+                        streaming={
+                          streaming && i === messages.length - 1 && message.role === 'assistant'
+                        }
+                      />
+                    ))}
+                    {streaming && messages[messages.length - 1]?.role === 'user' && (
+                      <div className="msg msg-assistant msg-pending">
+                        <span className="cursor" />
+                      </div>
+                    )}
+                  </div>
                   {messages.length === 0 && (
                     <div className="chat-empty-hint">Send a message to start a new chat.</div>
                   )}
