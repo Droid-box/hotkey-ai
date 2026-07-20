@@ -3,7 +3,7 @@ import { IpcChannels } from '../../preload/shared/ipcChannels'
 import type { Assistant } from '../../preload/shared/types'
 import { AssistantInputSchema } from '../store/schema'
 import type { AssistantStore } from '../store/assistantStore'
-import { conversationCache } from '../chat/conversationCache'
+import { conversationStore } from '../chat/conversationStore'
 
 // Broadcasts to every open window (management + overlay) so a currently-open
 // overlay can pick up an edited system prompt/model/provider without a restart.
@@ -39,9 +39,8 @@ export function registerAssistantsIpc(store: AssistantStore, onChanged?: () => v
   ipcMain.handle(IpcChannels.assistantDelete, (_event, id: unknown): void => {
     if (typeof id !== 'string') throw new Error('Assistant id must be a string')
     store.delete(id)
-    // Drop the deleted assistant's persisted history so a new assistant that
-    // reuses the id (it won't — UUIDs) or leftover disk state can't resurface.
-    conversationCache.clear(id)
+    // Drop the deleted assistant's conversation threads from disk too.
+    conversationStore.clearAssistant(id)
     notifyChanged()
   })
 }

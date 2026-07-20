@@ -19,6 +19,10 @@ const CHAT_WINDOW_DIMENSIONS: Record<ChatWindowSize, { width: number; maxHeight:
 const OVERLAY_MIN_HEIGHT = 110
 const BOTTOM_MARGIN = 24
 
+// Extra width added on the left for the history sidebar when it's open; the
+// window also jumps to the preset's max height so the thread list has room.
+const SIDEBAR_WIDTH = 260
+
 // Open animation: the whole window slides up from a small offset below its
 // resting spot at a constant (linear) speed — a floating panel emerging from
 // the bottom. Driven in the main process (setBounds) so it moves as a single
@@ -49,6 +53,9 @@ class OverlayWindowManager {
   // summon so a change in Settings takes effect the next time the chat opens.
   private overlayWidth = CHAT_WINDOW_DIMENSIONS.small.width
   private maxHeight = CHAT_WINDOW_DIMENSIONS.small.maxHeight
+  // History sidebar open → the window widens (leftward) and uses a fixed browse
+  // height instead of the content-driven one.
+  private historyOpen = false
 
   private applyChatWindowSize(): void {
     const dims = CHAT_WINDOW_DIMENSIONS[getChatWindowSize()]
@@ -173,9 +180,10 @@ class OverlayWindowManager {
     // switch) keeps its current position and doesn't animate.
     const fresh = !win.isVisible()
     if (fresh) {
-      // Fresh summon: pin defaults off so click-away dismisses as usual, and
-      // pick up any change to the chat window size preset.
+      // Fresh summon: pin defaults off so click-away dismisses as usual,
+      // history starts collapsed, and pick up any chat-window-size change.
       this.pinned = false
+      this.historyOpen = false
       this.applyChatWindowSize()
       const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
       this.overlayX = Math.round(workArea.x + (workArea.width - this.overlayWidth) / 2)
@@ -203,16 +211,38 @@ class OverlayWindowManager {
   }
 
   // Composes the window bounds from the fixed bottom edge, content height, and
-  // the transient open-animation slide offset.
+  // the transient open-animation slide offset. When the history sidebar is
+  // open the window widens leftward (keeping the chat/input side in place) and
+  // uses the preset's max height so the thread list has room.
   private applyOverlayBounds(): void {
     const win = this.window
     if (!win || win.isDestroyed()) return
+    let x = this.overlayX
+    let width = this.overlayWidth
+    let height = this.currentHeight
+    if (this.historyOpen) {
+      width += SIDEBAR_WIDTH
+      height = this.maxHeight
+      x = this.overlayX - SIDEBAR_WIDTH
+      const { workArea } = screen.getDisplayNearestPoint({
+        x: this.overlayX,
+        y: this.baseBottomEdge - 1
+      })
+      x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width))
+    }
     win.setBounds({
-      x: this.overlayX,
-      y: Math.round(this.baseBottomEdge - this.currentHeight + this.slideOffset),
-      width: this.overlayWidth,
-      height: this.currentHeight
+      x,
+      y: Math.round(this.baseBottomEdge - height + this.slideOffset),
+      width,
+      height
     })
+  }
+
+  // Toggle the history sidebar: resize the window in place (no re-summon).
+  setHistoryOpen(open: boolean): void {
+    if (this.historyOpen === open) return
+    this.historyOpen = open
+    this.applyOverlayBounds()
   }
 
   private startOpenAnimation(): void {
@@ -251,11 +281,17 @@ class OverlayWindowManager {
     const target = Math.round(
       Math.min(Math.max(contentHeight, OVERLAY_MIN_HEIGHT), this.maxHeight)
     )
+    // Remember the content height even while history is open, so closing the
+    // sidebar can revert to the right compact size.
+    this.currentHeight = target
+
+    // History open → window is pinned to the fixed browse height; don't resize
+    // to content or touch the base bounds (they'd read the widened rect).
+    if (this.historyOpen) return
 
     // While the open animation runs, keep the shared height in sync and let
     // applyOverlayBounds compose it with the slide offset.
     if (this.openAnimTimer) {
-      this.currentHeight = target
       this.applyOverlayBounds()
       return
     }
@@ -274,6 +310,7 @@ class OverlayWindowManager {
 
   hide(): void {
     this.pinned = false
+    this.historyOpen = false
     if (this.openAnimTimer) {
       clearInterval(this.openAnimTimer)
       this.openAnimTimer = null

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { OverlayConfigurePayload } from '../../preload/shared/types'
+import type { ConversationMeta, OverlayConfigurePayload } from '../../preload/shared/types'
 import { CopyTextProvider } from '../shared/chat/CopyText'
 import { MessageBubble, type DisplayMessage } from '../shared/chat/MessageBubble'
 import { Composer } from '../shared/chat/Composer'
@@ -21,6 +21,58 @@ function PinIcon({ filled }: { filled: boolean }) {
   )
 }
 
+// Clock = history / log.
+function HistoryIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 7.5v5l3.2 1.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+      <path d="M7 1.5v11M1.5 7h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M2.5 4h11M6 4V2.75h4V4M4 4l.5 9h7l.5-9M6.5 6.5v4M9.5 6.5v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function relativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diffMs / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}d ago`
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
 export function OverlayApp() {
   const [assistant, setAssistant] = useState<OverlayConfigurePayload['assistant']>(null)
   const [configured, setConfigured] = useState(false)
@@ -28,6 +80,9 @@ export function OverlayApp() {
   const [draft, setDraft] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [pinned, setPinned] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [conversations, setConversations] = useState<ConversationMeta[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const assistantIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -42,6 +97,9 @@ export function OverlayApp() {
         setAssistant(payload.assistant)
         assistantIdRef.current = payload.assistant?.id ?? null
         setMessages(payload.history)
+        setConversations(payload.conversations)
+        setActiveId(payload.activeConversationId)
+        setHistoryOpen(false) // main resets the window width on summon
         setStreaming(false)
         // Prefill with the clipboard when the assistant opts in; otherwise
         // start empty.
@@ -79,6 +137,13 @@ export function OverlayApp() {
           ...prev,
           { role: 'assistant', content: message, error: true, errorAction: action }
         ])
+      }),
+      // Live sidebar updates: a thread gaining messages, reordering, or getting
+      // an AI title.
+      window.hotkeyAI.conversations.onChanged(({ assistantId, list }) => {
+        if (assistantId !== assistantIdRef.current) return
+        setConversations(list.conversations)
+        setActiveId(list.activeId)
       })
     ]
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
@@ -99,16 +164,16 @@ export function OverlayApp() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages])
 
-  // Fit the window to its content: header + conversation + input. The main
-  // process clamps between compact (input-only) and max height, so the
-  // overlay opens small and grows with the conversation.
+  // Fit the window to its content (header + conversation + input). While the
+  // history sidebar is open the main process pins a fixed browse height and
+  // ignores this; on close it reverts to the measured compact size.
   useLayoutEffect(() => {
     const headerHeight = headerRef.current?.offsetHeight ?? 0
     const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
     const messagesHeight = messages.length > 0 ? (scrollRef.current?.scrollHeight ?? 0) : 0
     const noAssistantHeight = assistant ? 0 : 80
     window.hotkeyAI.resizeContent(headerHeight + messagesHeight + inputHeight + noAssistantHeight + 2)
-  }, [assistant, messages, draft, streaming])
+  }, [assistant, messages, draft, streaming, historyOpen])
 
   function send(): void {
     const text = draft.trim()
@@ -121,9 +186,6 @@ export function OverlayApp() {
 
   function retry(): void {
     if (!assistant || streaming) return
-    // Re-send the most recent user turn. Main dropped it from history when the
-    // request failed, so sendMessage re-appends it; we just clear the error
-    // bubble(s) and keep the user's message on screen.
     const lastUser = [...messages].reverse().find((m) => m.role === 'user' && !m.error)
     if (!lastUser) return
     setMessages((prev) => prev.filter((m) => !m.error))
@@ -135,6 +197,7 @@ export function OverlayApp() {
     if (!assistant) return
     window.hotkeyAI.resetChat(assistant.id)
     setMessages([])
+    setActiveId(null)
     setStreaming(false)
     inputRef.current?.focus()
   }
@@ -145,95 +208,176 @@ export function OverlayApp() {
     window.hotkeyAI.setPinned(next)
   }
 
+  function toggleHistory(): void {
+    const next = !historyOpen
+    setHistoryOpen(next)
+    window.hotkeyAI.setHistoryOpen(next)
+  }
+
+  async function openThread(conversationId: string): Promise<void> {
+    if (!assistant || conversationId === activeId) return
+    window.hotkeyAI.abort(assistant.id)
+    const msgs = await window.hotkeyAI.conversations.open(assistant.id, conversationId)
+    setMessages(msgs)
+    setActiveId(conversationId)
+    setStreaming(false)
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  async function deleteThread(conversationId: string): Promise<void> {
+    if (!assistant) return
+    const wasActive = conversationId === activeId
+    const list = await window.hotkeyAI.conversations.delete(assistant.id, conversationId)
+    setConversations(list.conversations)
+    setActiveId(list.activeId)
+    if (wasActive) setMessages([])
+  }
+
   return (
     <CopyTextProvider value={window.hotkeyAI.copyText}>
       <div className="overlay">
-        <header className="overlay-header" ref={headerRef}>
-          <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
-          {assistant && (
-            <span className="overlay-badge">
-              {assistant.provider}/{assistant.model}
-            </span>
-          )}
-          <div className="overlay-actions">
-            {assistant && messages.length > 0 && (
+        {historyOpen && assistant && (
+          <aside className="history-sidebar">
+            <div className="history-header">
+              <span className="history-title">History</span>
               <button
                 className="overlay-action"
                 onClick={newChat}
                 aria-label="Start a new chat"
                 title="New chat"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                  <path
-                    d="M7 1.5v11M1.5 7h11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <PlusIcon />
               </button>
-            )}
-            <button
-              className={`overlay-action ${pinned ? 'overlay-action-active' : ''}`}
-              onClick={togglePin}
-              aria-label={pinned ? 'Unpin overlay' : 'Pin overlay'}
-              aria-pressed={pinned}
-              title={pinned ? 'Unpin (auto-hides on click away)' : 'Pin (stays open on click away)'}
-            >
-              <PinIcon filled={pinned} />
-            </button>
-            <button
-              className="overlay-close"
-              onClick={() => window.hotkeyAI.close()}
-              aria-label="Close overlay"
-            >
-              &times;
-            </button>
-          </div>
-        </header>
-
-        {assistant ? (
-          <>
-            {messages.length > 0 && (
-              <div className="chat-messages" ref={scrollRef}>
-                {messages.map((message, i) => (
-                  <MessageBubble
-                    key={i}
-                    message={message}
-                    onRetry={retry}
-                    onOpenApiKeys={() => window.hotkeyAI.openApiKeys()}
-                    streaming={
-                      streaming && i === messages.length - 1 && message.role === 'assistant'
-                    }
-                  />
-                ))}
-                {streaming && messages[messages.length - 1]?.role === 'user' && (
-                  <div className="msg msg-assistant msg-pending">
-                    <span className="cursor" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="chat-input-area" ref={inputAreaRef}>
-              <Composer
-                value={draft}
-                onChange={setDraft}
-                onSubmit={send}
-                onStop={() => assistant && window.hotkeyAI.abort(assistant.id)}
-                streaming={streaming}
-                placeholder={`Message ${assistant.name}…`}
-                inputRef={inputRef}
-              />
             </div>
-          </>
-        ) : (
-          <div className="overlay-body">
-            {configured
-              ? 'No assistants yet. Open the Hotkey AI window from the tray icon and create one first.'
-              : 'Waiting for an assistant to be configured…'}
-          </div>
+            <div className="history-list">
+              {conversations.length === 0 ? (
+                <div className="history-empty">No past chats yet.</div>
+              ) : (
+                conversations.map((c) => (
+                  <div
+                    key={c.id}
+                    className={`history-item ${c.id === activeId ? 'history-item-active' : ''}`}
+                    onClick={() => openThread(c.id)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="history-item-text">
+                      <span className="history-item-title">{c.title}</span>
+                      <span className="history-item-time">{relativeTime(c.updatedAt)}</span>
+                    </div>
+                    <button
+                      className="history-delete"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void deleteThread(c.id)
+                      }}
+                      aria-label="Delete conversation"
+                      title="Delete"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </aside>
         )}
+
+        <div className="overlay-main">
+          <header className="overlay-header" ref={headerRef}>
+            <span className="overlay-title">{assistant?.name ?? 'Hotkey AI'}</span>
+            {assistant && (
+              <span className="overlay-badge">
+                {assistant.provider}/{assistant.model}
+              </span>
+            )}
+            <div className="overlay-actions">
+              {assistant && messages.length > 0 && (
+                <button
+                  className="overlay-action"
+                  onClick={newChat}
+                  aria-label="Start a new chat"
+                  title="New chat"
+                >
+                  <PlusIcon />
+                </button>
+              )}
+              {assistant && (
+                <button
+                  className={`overlay-action ${historyOpen ? 'overlay-action-active' : ''}`}
+                  onClick={toggleHistory}
+                  aria-label={historyOpen ? 'Hide history' : 'Show history'}
+                  aria-pressed={historyOpen}
+                  title="History"
+                >
+                  <HistoryIcon />
+                </button>
+              )}
+              <button
+                className={`overlay-action ${pinned ? 'overlay-action-active' : ''}`}
+                onClick={togglePin}
+                aria-label={pinned ? 'Unpin overlay' : 'Pin overlay'}
+                aria-pressed={pinned}
+                title={pinned ? 'Unpin (auto-hides on click away)' : 'Pin (stays open on click away)'}
+              >
+                <PinIcon filled={pinned} />
+              </button>
+              <button
+                className="overlay-close"
+                onClick={() => window.hotkeyAI.close()}
+                aria-label="Close overlay"
+              >
+                &times;
+              </button>
+            </div>
+          </header>
+
+          {assistant ? (
+            <>
+              {(messages.length > 0 || historyOpen) && (
+                <div className="chat-messages" ref={scrollRef}>
+                  {messages.map((message, i) => (
+                    <MessageBubble
+                      key={i}
+                      message={message}
+                      onRetry={retry}
+                      onOpenApiKeys={() => window.hotkeyAI.openApiKeys()}
+                      streaming={
+                        streaming && i === messages.length - 1 && message.role === 'assistant'
+                      }
+                    />
+                  ))}
+                  {streaming && messages[messages.length - 1]?.role === 'user' && (
+                    <div className="msg msg-assistant msg-pending">
+                      <span className="cursor" />
+                    </div>
+                  )}
+                  {messages.length === 0 && (
+                    <div className="chat-empty-hint">Send a message to start a new chat.</div>
+                  )}
+                </div>
+              )}
+
+              <div className="chat-input-area" ref={inputAreaRef}>
+                <Composer
+                  value={draft}
+                  onChange={setDraft}
+                  onSubmit={send}
+                  onStop={() => assistant && window.hotkeyAI.abort(assistant.id)}
+                  streaming={streaming}
+                  placeholder={`Message ${assistant.name}…`}
+                  inputRef={inputRef}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="overlay-body">
+              {configured
+                ? 'No assistants yet. Open the Hotkey AI window from the tray icon and create one first.'
+                : 'Waiting for an assistant to be configured…'}
+            </div>
+          )}
+        </div>
       </div>
     </CopyTextProvider>
   )

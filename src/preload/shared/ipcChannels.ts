@@ -41,6 +41,12 @@ export const IpcChannels = {
   overlayResizeContent: 'overlay:resize-content',
   overlaySetPinned: 'overlay:set-pinned',
   overlayOpenApiKeys: 'overlay:open-api-keys',
+  overlaySetHistoryOpen: 'overlay:set-history-open',
+
+  conversationsList: 'conversations:list',
+  conversationsOpen: 'conversations:open',
+  conversationsDelete: 'conversations:delete',
+  conversationsChanged: 'conversations:changed',
 
   managementNavigate: 'management:navigate',
 

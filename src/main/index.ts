@@ -9,6 +9,7 @@ import { registerShortcutsIpc } from './ipc/shortcutsIpc'
 import { registerSecretsIpc } from './ipc/secretsIpc'
 import { registerChatIpc, resetConversation } from './ipc/chatIpc'
 import { registerTestChatIpc } from './ipc/testChatIpc'
+import { registerConversationsIpc } from './ipc/conversationsIpc'
 import { registerModelsIpc } from './ipc/modelsIpc'
 import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
@@ -18,7 +19,7 @@ import { getLaunchAtStartup, getTheme } from './store/settingsStore'
 import { applyLaunchAtStartup, wasLaunchedAtStartup } from './lib/loginItem'
 import { applyThemeSource } from './lib/theme'
 import { shortcutManager } from './shortcuts/shortcutManager'
-import { conversationCache } from './chat/conversationCache'
+import { conversationStore } from './chat/conversationStore'
 import { startDevServerWatchdog } from './lib/devServerWatchdog'
 
 // Under X11/WSLg, Electron falls back to the oversized black X11 core
@@ -41,6 +42,8 @@ function openAssistantOverlay(assistantId: string): void {
     resetConversation(assistantId)
   }
 
+  conversationStore.ensureActive(assistant.id)
+  const conversations = conversationStore.list(assistant.id)
   overlayWindowManager.showFor({
     assistant: {
       id: assistant.id,
@@ -48,7 +51,9 @@ function openAssistantOverlay(assistantId: string): void {
       provider: assistant.provider,
       model: assistant.model
     },
-    history: conversationCache.get(assistant.id),
+    history: conversationStore.getActiveMessages(assistant.id),
+    conversations: conversations.conversations,
+    activeConversationId: conversations.activeId,
     // Stage the clipboard in the input when the assistant opts in, so its
     // hotkey acts on whatever the user just copied.
     prefill: assistant.prefillClipboard ? clipboard.readText() : undefined
@@ -102,6 +107,7 @@ if (!gotSingleInstanceLock) {
     registerSecretsIpc()
     registerChatIpc(assistantStore)
     registerTestChatIpc(assistantStore)
+    registerConversationsIpc()
     registerModelsIpc()
     registerSettingsIpc()
     registerWindowControlsIpc()
@@ -115,7 +121,7 @@ if (!gotSingleInstanceLock) {
     nativeTheme.on('updated', () => managementWindowManager.refreshThemeBackground())
 
     // Load persisted conversations before the overlay can be summoned.
-    conversationCache.init()
+    conversationStore.init()
 
     // Re-assert the OS login item from our stored preference, in case it was
     // changed outside the app (e.g. Task Manager > Startup).
@@ -145,7 +151,7 @@ if (!gotSingleInstanceLock) {
       // the exact code path a global shortcut press takes.
       ;(globalThis as Record<string, unknown>)['__hotkeyDebug'] = {
         openAssistantOverlay,
-        conversationCache
+        conversationStore
       }
     }
   })

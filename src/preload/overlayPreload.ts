@@ -1,9 +1,11 @@
 import { clipboard, contextBridge, ipcRenderer } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
+  ChatMessage,
   ChatStreamChunk,
   ChatStreamEnd,
   ChatStreamError,
+  ConversationList,
   OverlayBridge,
   OverlayConfigurePayload
 } from './shared/types'
@@ -29,6 +31,20 @@ const bridge: OverlayBridge = {
   },
   openApiKeys: (): void => {
     ipcRenderer.send(IpcChannels.overlayOpenApiKeys)
+  },
+  setHistoryOpen: (open: boolean): void => {
+    ipcRenderer.send(IpcChannels.overlaySetHistoryOpen, open)
+  },
+  conversations: {
+    list: (assistantId: string): Promise<ConversationList> =>
+      ipcRenderer.invoke(IpcChannels.conversationsList, { assistantId }),
+    open: (assistantId: string, conversationId: string): Promise<ChatMessage[]> =>
+      ipcRenderer.invoke(IpcChannels.conversationsOpen, { assistantId, conversationId }),
+    delete: (assistantId: string, conversationId: string): Promise<ConversationList> =>
+      ipcRenderer.invoke(IpcChannels.conversationsDelete, { assistantId, conversationId }),
+    onChanged: subscribe<{ assistantId: string; list: ConversationList }>(
+      IpcChannels.conversationsChanged
+    )
   },
   sendMessage: (assistantId: string, message: string): void => {
     ipcRenderer.send(IpcChannels.chatSend, { assistantId, message })

@@ -17,6 +17,10 @@ export function registerOverlayIpc(): void {
     overlayWindowManager.setPinned(z.boolean().parse(rawPinned))
   })
 
+  ipcMain.on(IpcChannels.overlaySetHistoryOpen, (_event, rawOpen: unknown) => {
+    overlayWindowManager.setHistoryOpen(z.boolean().parse(rawOpen))
+  })
+
   // From a "no API key" error in the overlay: hide the (always-on-top) overlay
   // so it doesn't cover the window, then open the management UI on the keys tab.
   ipcMain.on(IpcChannels.overlayOpenApiKeys, () => {

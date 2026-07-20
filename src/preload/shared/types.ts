@@ -64,6 +64,20 @@ export interface ChatMessage {
   content: string
 }
 
+/** A saved conversation thread (metadata only; messages live in its file). */
+export interface ConversationMeta {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** The sidebar payload for one assistant: its threads + which one is active. */
+export interface ConversationList {
+  activeId: string | null
+  conversations: ConversationMeta[]
+}
+
 export interface ApiKeyStatus {
   hasKey: boolean
   masked: string | null
@@ -186,6 +200,10 @@ export interface OverlayConfigurePayload {
   justOpened: boolean
   /** Text to pre-fill the input with (clipboard contents), if enabled. */
   prefill?: string
+  /** This assistant's saved threads (for the history sidebar), newest first. */
+  conversations: ConversationMeta[]
+  /** The thread currently shown (null when it's a fresh, empty one). */
+  activeConversationId: string | null
 }
 
 export interface ChatStreamChunk {
@@ -219,6 +237,20 @@ export interface OverlayBridge {
   setPinned: (pinned: boolean) => void
   /** Open the management window on the API keys tab (from a missing-key error). */
   openApiKeys: () => void
+  /** Toggle the history sidebar — main widens/resizes the window accordingly. */
+  setHistoryOpen: (open: boolean) => void
+  /** Conversation history (threads) for the history sidebar. */
+  conversations: {
+    list: (assistantId: string) => Promise<ConversationList>
+    /** Make a past thread active; resolves to its messages. */
+    open: (assistantId: string, conversationId: string) => Promise<ChatMessage[]>
+    /** Delete a thread; resolves to the updated list. */
+    delete: (assistantId: string, conversationId: string) => Promise<ConversationList>
+    /** Pushed when the active thread gains messages / reorders / is titled. */
+    onChanged: (
+      callback: (payload: { assistantId: string; list: ConversationList }) => void
+    ) => () => void
+  }
   onStreamChunk: (callback: (payload: ChatStreamChunk) => void) => () => void
   onStreamEnd: (callback: (payload: ChatStreamEnd) => void) => () => void
   onStreamError: (callback: (payload: ChatStreamError) => void) => () => void
