@@ -4,7 +4,12 @@ import { IpcChannels } from '../../preload/shared/ipcChannels'
 import { overlayWindowManager } from '../windows/overlayWindow'
 import { managementWindowManager } from '../windows/managementWindow'
 
-const ContentHeightSchema = z.number().min(0).max(4000)
+// A tall conversation can legitimately measure well past any fixed pixel cap.
+// resizeToContent() clamps the height to the window's maxHeight, so we only
+// validate it's a finite, non-negative number here — a hard .max() would throw
+// an uncaught ZodError (this is a fire-and-forget ipcMain.on handler) and crash
+// the main process instead of simply clamping.
+const ContentHeightSchema = z.number().min(0)
 
 export function registerOverlayIpc(): void {
   ipcMain.on(IpcChannels.overlayClose, () => overlayWindowManager.hide())
