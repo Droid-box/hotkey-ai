@@ -246,6 +246,8 @@ export interface OverlayBridge {
     open: (assistantId: string, conversationId: string) => Promise<ChatMessage[]>
     /** Delete a thread; resolves to the updated list. */
     delete: (assistantId: string, conversationId: string) => Promise<ConversationList>
+    /** Delete several threads at once (bulk select); resolves to the updated list. */
+    deleteMany: (assistantId: string, conversationIds: string[]) => Promise<ConversationList>
     /** Pushed when the active thread gains messages / reorders / is titled. */
     onChanged: (
       callback: (payload: { assistantId: string; list: ConversationList }) => void

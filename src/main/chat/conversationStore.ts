@@ -299,6 +299,24 @@ export const conversationStore = {
     writeIndex(assistantId)
   },
 
+  // Delete several threads at once (bulk-select in the history sidebar). Writes
+  // the index a single time rather than once per thread.
+  deleteConversations(assistantId: string, conversationIds: string[]): void {
+    const s = stateFor(assistantId)
+    for (const conversationId of conversationIds) {
+      s.metas.delete(conversationId)
+      messagesCache.delete(conversationId)
+      try {
+        const f = messagesPath(assistantId, conversationId)
+        if (existsSync(f)) unlinkSync(f)
+      } catch {
+        // best-effort
+      }
+      if (s.activeId === conversationId) s.activeId = null
+    }
+    writeIndex(assistantId)
+  },
+
   // Reset-chat-on-close / restart: next summon starts a blank thread; the
   // current thread stays in history.
   startFresh(assistantId: string): void {

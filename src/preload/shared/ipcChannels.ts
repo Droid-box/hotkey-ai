@@ -46,6 +46,7 @@ export const IpcChannels = {
   conversationsList: 'conversations:list',
   conversationsOpen: 'conversations:open',
   conversationsDelete: 'conversations:delete',
+  conversationsDeleteMany: 'conversations:delete-many',
   conversationsChanged: 'conversations:changed',
 
   managementNavigate: 'management:navigate',

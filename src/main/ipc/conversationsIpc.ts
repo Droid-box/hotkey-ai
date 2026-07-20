@@ -6,6 +6,10 @@ import { conversationStore } from '../chat/conversationStore'
 
 const AssistantSchema = z.object({ assistantId: z.string() })
 const ConversationSchema = z.object({ assistantId: z.string(), conversationId: z.string() })
+const ConversationsSchema = z.object({
+  assistantId: z.string(),
+  conversationIds: z.array(z.string()).max(200)
+})
 
 export function registerConversationsIpc(): void {
   ipcMain.handle(IpcChannels.conversationsList, (_event, raw: unknown): ConversationList => {
@@ -22,6 +26,12 @@ export function registerConversationsIpc(): void {
   ipcMain.handle(IpcChannels.conversationsDelete, (_event, raw: unknown): ConversationList => {
     const { assistantId, conversationId } = ConversationSchema.parse(raw)
     conversationStore.deleteConversation(assistantId, conversationId)
+    return conversationStore.list(assistantId)
+  })
+
+  ipcMain.handle(IpcChannels.conversationsDeleteMany, (_event, raw: unknown): ConversationList => {
+    const { assistantId, conversationIds } = ConversationsSchema.parse(raw)
+    conversationStore.deleteConversations(assistantId, conversationIds)
     return conversationStore.list(assistantId)
   })
 }

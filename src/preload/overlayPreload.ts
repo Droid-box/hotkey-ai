@@ -42,6 +42,8 @@ const bridge: OverlayBridge = {
       ipcRenderer.invoke(IpcChannels.conversationsOpen, { assistantId, conversationId }),
     delete: (assistantId: string, conversationId: string): Promise<ConversationList> =>
       ipcRenderer.invoke(IpcChannels.conversationsDelete, { assistantId, conversationId }),
+    deleteMany: (assistantId: string, conversationIds: string[]): Promise<ConversationList> =>
+      ipcRenderer.invoke(IpcChannels.conversationsDeleteMany, { assistantId, conversationIds }),
     onChanged: subscribe<{ assistantId: string; list: ConversationList }>(
       IpcChannels.conversationsChanged
     )

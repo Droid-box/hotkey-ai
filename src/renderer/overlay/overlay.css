@@ -92,7 +92,10 @@ body {
   user-select: none;
 }
 
-.history-header .overlay-action {
+/* Every interactive control in the header sits above the drag region. */
+.history-header button,
+.history-header label,
+.history-header input {
   -webkit-app-region: no-drag;
 }
 
@@ -100,6 +103,81 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: var(--overlay-title);
+}
+
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Small text buttons in the sidebar header (Select / Cancel). */
+.history-text-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.history-text-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+
+/* "Select all" toggle + live count on the left of the select-mode header. */
+.history-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.history-select-all input {
+  accent-color: var(--danger);
+  cursor: pointer;
+}
+
+/* Trash button that deletes the current selection. */
+.history-delete-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.history-delete-selected:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+.history-delete-selected:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.history-item-check {
+  flex-shrink: 0;
+  accent-color: var(--danger);
+  margin: 0;
+  pointer-events: none;
+}
+
+.history-item-selected {
+  background: var(--danger-bg);
 }
 
 .history-list {

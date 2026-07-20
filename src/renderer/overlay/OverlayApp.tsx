@@ -83,6 +83,8 @@ export function OverlayApp() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [conversations, setConversations] = useState<ConversationMeta[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const assistantIdRef = useRef<string | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -101,6 +103,8 @@ export function OverlayApp() {
         setConversations(payload.conversations)
         setActiveId(payload.activeConversationId)
         setHistoryOpen(false) // main resets the window width on summon
+        setSelectMode(false)
+        setSelectedIds(new Set())
         setStreaming(false)
         // Prefill with the clipboard when the assistant opts in; otherwise
         // start empty.
@@ -203,6 +207,7 @@ export function OverlayApp() {
     setMessages([])
     setActiveId(null)
     setStreaming(false)
+    exitSelectMode()
     inputRef.current?.focus()
   }
 
@@ -216,6 +221,37 @@ export function OverlayApp() {
     const next = !historyOpen
     setHistoryOpen(next)
     window.hotkeyAI.setHistoryOpen(next)
+    if (!next) exitSelectMode() // closing history drops any in-progress selection
+  }
+
+  function exitSelectMode(): void {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
+  function toggleSelected(conversationId: string): void {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(conversationId)) next.delete(conversationId)
+      else next.add(conversationId)
+      return next
+    })
+  }
+
+  const allSelected = conversations.length > 0 && selectedIds.size === conversations.length
+
+  function toggleSelectAll(): void {
+    setSelectedIds(allSelected ? new Set() : new Set(conversations.map((c) => c.id)))
+  }
+
+  async function deleteSelected(): Promise<void> {
+    if (!assistant || selectedIds.size === 0) return
+    const activeDeleted = activeId != null && selectedIds.has(activeId)
+    const list = await window.hotkeyAI.conversations.deleteMany(assistant.id, [...selectedIds])
+    setConversations(list.conversations)
+    setActiveId(list.activeId)
+    if (activeDeleted) setMessages([])
+    exitSelectMode()
   }
 
   async function openThread(conversationId: string): Promise<void> {
@@ -243,45 +279,109 @@ export function OverlayApp() {
         {historyOpen && assistant && (
           <aside className="history-sidebar">
             <div className="history-header">
-              <span className="history-title">History</span>
-              <button
-                className="overlay-action"
-                onClick={newChat}
-                aria-label="Start a new chat"
-                title="New chat"
-              >
-                <PlusIcon />
-              </button>
+              {selectMode ? (
+                <>
+                  <label className="history-select-all">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all chats"
+                    />
+                    <span>{selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}</span>
+                  </label>
+                  <div className="history-header-actions">
+                    <button
+                      className="history-delete-selected"
+                      onClick={() => void deleteSelected()}
+                      disabled={selectedIds.size === 0}
+                      aria-label={`Delete ${selectedIds.size} selected chats`}
+                      title="Delete selected"
+                    >
+                      <TrashIcon />
+                    </button>
+                    <button className="history-text-btn" onClick={exitSelectMode} title="Cancel">
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="history-title">History</span>
+                  <div className="history-header-actions">
+                    {conversations.length > 0 && (
+                      <button
+                        className="history-text-btn"
+                        onClick={() => setSelectMode(true)}
+                        title="Select chats to delete"
+                      >
+                        Select
+                      </button>
+                    )}
+                    <button
+                      className="overlay-action"
+                      onClick={newChat}
+                      aria-label="Start a new chat"
+                      title="New chat"
+                    >
+                      <PlusIcon />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
             <div className="history-list">
               {conversations.length === 0 ? (
                 <div className="history-empty">No past chats yet.</div>
               ) : (
-                conversations.map((c) => (
-                  <div
-                    key={c.id}
-                    className={`history-item ${c.id === activeId ? 'history-item-active' : ''}`}
-                    onClick={() => openThread(c.id)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="history-item-text">
-                      <span className="history-item-title">{c.title}</span>
-                      <span className="history-item-time">{relativeTime(c.updatedAt)}</span>
-                    </div>
-                    <button
-                      className="history-delete"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        void deleteThread(c.id)
-                      }}
-                      aria-label="Delete conversation"
-                      title="Delete"
+                conversations.map((c) => {
+                  const selected = selectedIds.has(c.id)
+                  return (
+                    <div
+                      key={c.id}
+                      className={`history-item ${
+                        selectMode
+                          ? selected
+                            ? 'history-item-selected'
+                            : ''
+                          : c.id === activeId
+                            ? 'history-item-active'
+                            : ''
+                      }`}
+                      onClick={() => (selectMode ? toggleSelected(c.id) : openThread(c.id))}
+                      role="button"
+                      tabIndex={0}
                     >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                ))
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          className="history-item-check"
+                          checked={selected}
+                          readOnly
+                          tabIndex={-1}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div className="history-item-text">
+                        <span className="history-item-title">{c.title}</span>
+                        <span className="history-item-time">{relativeTime(c.updatedAt)}</span>
+                      </div>
+                      {!selectMode && (
+                        <button
+                          className="history-delete"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void deleteThread(c.id)
+                          }}
+                          aria-label="Delete conversation"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
           </aside>
