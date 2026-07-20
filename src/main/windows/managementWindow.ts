@@ -12,7 +12,16 @@ import { windowBackground } from '../lib/theme'
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 function persistWindowState(win: BrowserWindow): void {
   if (win.isDestroyed()) return
-  const b = getNormalBounds(win) ?? win.getBounds()
+  const normal = getNormalBounds(win)
+  if (!normal && win.isMaximized()) {
+    // No trustworthy windowed rect this session (e.g. launched maximized and
+    // never left it). Persisting getBounds() here would save the maximized
+    // rectangle as the "windowed" size and poison the next launch — keep the
+    // stored geometry and only update the flag.
+    saveManagementWindowState({ ...loadManagementWindowState(), isMaximized: true })
+    return
+  }
+  const b = normal ?? win.getBounds()
   saveManagementWindowState({
     x: b.x,
     y: b.y,
@@ -33,6 +42,27 @@ function scheduleWindowStateSave(win: BrowserWindow): void {
 // button. The drag-to-unmaximize path positions the window under the cursor
 // itself, so it opts out via this set to avoid being overridden.
 const skipUnmaximizeRestore = new WeakSet<BrowserWindow>()
+
+// The first maximize of a session can overshoot the display's work area by the
+// invisible resize-border width (a frameless-window quirk); on a multi-monitor
+// edge there's a neighbouring display to make the overshoot visible, so the
+// window "spills" a few pixels onto it. Subsequent maximizes compute correctly.
+// Rather than depend on why the OS mis-places that first one, measure the
+// result once it settles and clip the still-maximized window to its work area
+// in place — a no-op whenever the bounds are already right.
+function clampMaximizedToWorkArea(win: BrowserWindow): void {
+  setTimeout(() => {
+    if (win.isDestroyed() || !win.isMaximized()) return
+    const b = win.getBounds()
+    const { workArea } = screen.getDisplayMatching(b)
+    const overshoots =
+      b.x < workArea.x ||
+      b.y < workArea.y ||
+      b.x + b.width > workArea.x + workArea.width ||
+      b.y + b.height > workArea.y + workArea.height
+    if (overshoots) win.setBounds(workArea)
+  }, 60)
+}
 
 // Restore a maximized window to its previous windowed size, repositioned so
 // the cursor sits at the same horizontal ratio along the title bar (and near
@@ -177,7 +207,10 @@ class ManagementWindowManager {
       // disables it). Toggle resizable so a maximized window can't be edge-
       // resized and shows no resize cursors. Linux uses manual maximize
       // (these events don't fire there) and must stay non-resizable.
-      if (process.platform !== 'linux') win.setResizable(false)
+      if (process.platform !== 'linux') {
+        win.setResizable(false)
+        clampMaximizedToWorkArea(win)
+      }
       win.webContents.send(IpcChannels.windowMaximizedChanged, true)
     })
     win.on('unmaximize', () => {
