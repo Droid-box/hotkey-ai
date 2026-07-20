@@ -24,6 +24,9 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
+  # Space-free output name (productName has a space) so the CI upload globs and
+  # electron-updater's download URLs stay clean.
+  artifactName: Hotkey-AI-Setup-${version}.${ext}
 # GitHub Releases is the update feed: the build uploads the installer plus
 # latest.yml here, and electron-updater in the app reads latest.yml from the
 # same public repo (no auth needed).

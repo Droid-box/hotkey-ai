@@ -32,14 +32,15 @@ jobs:
       # once, atomically, below.
       - run: npx electron-builder --win --publish never
 
-      # Create ONE draft release with all artifacts in a single call.
+      # Upload all artifacts to ONE draft release. This action handles the file
+      # globbing/quoting robustly (unlike a hand-rolled gh call) and creates a
+      # single release for the tag.
       - name: Create draft release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" \
-            dist/*.exe dist/*.blockmap dist/latest.yml \
-            --draft \
-            --title "${{ github.ref_name }}" \
-            --notes "Automated build of ${{ github.ref_name }}."
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: ${{ github.ref_name }}
+          files: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
