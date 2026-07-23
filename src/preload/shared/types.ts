@@ -239,6 +239,8 @@ export interface OverlayBridge {
   openApiKeys: () => void
   /** Toggle the history sidebar — main widens/resizes the window accordingly. */
   setHistoryOpen: (open: boolean) => void
+  /** Set the overlay's text zoom factor (1 = 100%). Renderer-only (webFrame). */
+  setZoom: (factor: number) => void
   /** Conversation history (threads) for the history sidebar. */
   conversations: {
     list: (assistantId: string) => Promise<ConversationList>
@@ -248,6 +250,8 @@ export interface OverlayBridge {
     delete: (assistantId: string, conversationId: string) => Promise<ConversationList>
     /** Delete several threads at once (bulk select); resolves to the updated list. */
     deleteMany: (assistantId: string, conversationIds: string[]) => Promise<ConversationList>
+    /** Rename a thread; resolves to the updated list. */
+    rename: (assistantId: string, conversationId: string, title: string) => Promise<ConversationList>
     /** Pushed when the active thread gains messages / reorders / is titled. */
     onChanged: (
       callback: (payload: { assistantId: string; list: ConversationList }) => void

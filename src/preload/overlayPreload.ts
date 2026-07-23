@@ -1,4 +1,4 @@
-import { clipboard, contextBridge, ipcRenderer } from 'electron'
+import { clipboard, contextBridge, ipcRenderer, webFrame } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
   ChatMessage,
@@ -35,6 +35,12 @@ const bridge: OverlayBridge = {
   setHistoryOpen: (open: boolean): void => {
     ipcRenderer.send(IpcChannels.overlaySetHistoryOpen, open)
   },
+  // Text zoom (Ctrl +/-/0). Handled entirely in the renderer frame — no main
+  // round-trip. Scales the whole overlay like browser zoom; the renderer feeds
+  // the factor back into resizeContent so the window still fits.
+  setZoom: (factor: number): void => {
+    webFrame.setZoomFactor(factor)
+  },
   conversations: {
     list: (assistantId: string): Promise<ConversationList> =>
       ipcRenderer.invoke(IpcChannels.conversationsList, { assistantId }),
@@ -44,6 +50,8 @@ const bridge: OverlayBridge = {
       ipcRenderer.invoke(IpcChannels.conversationsDelete, { assistantId, conversationId }),
     deleteMany: (assistantId: string, conversationIds: string[]): Promise<ConversationList> =>
       ipcRenderer.invoke(IpcChannels.conversationsDeleteMany, { assistantId, conversationIds }),
+    rename: (assistantId: string, conversationId: string, title: string): Promise<ConversationList> =>
+      ipcRenderer.invoke(IpcChannels.conversationsRename, { assistantId, conversationId, title }),
     onChanged: subscribe<{ assistantId: string; list: ConversationList }>(
       IpcChannels.conversationsChanged
     )

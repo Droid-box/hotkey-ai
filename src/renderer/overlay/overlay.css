@@ -217,13 +217,15 @@ body {
   color: var(--text-faint);
 }
 
-.history-delete {
+/* Per-chat kebab menu trigger — revealed on row hover (or while its menu is
+   open). Neutral, unlike the destructive bulk-delete. */
+.history-menu-btn {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -233,12 +235,64 @@ body {
   transition: opacity 0.12s, background-color 0.12s, color 0.12s;
 }
 
-.history-item:hover .history-delete {
+.history-item:hover .history-menu-btn,
+.history-item-menu-open .history-menu-btn {
   opacity: 1;
 }
 
-.history-delete:hover {
+.history-menu-btn:hover,
+.history-item-menu-open .history-menu-btn {
   background: var(--hover-bg);
+  color: var(--text);
+}
+
+/* Rename: inline text field in place of the title (fixed by the menu). */
+.history-rename-input {
+  width: 100%;
+  padding: 2px 6px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  background: var(--overlay-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+/* Floating actions menu (Rename / Delete). position: fixed so it isn't clipped
+   by the history list's overflow; coordinates are set inline from the button. */
+.history-menu {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  background: var(--overlay-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.history-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.history-menu-item:hover {
+  background: var(--hover-bg);
+}
+
+.history-menu-item-danger:hover {
+  background: var(--danger-bg);
   color: var(--danger);
 }
 

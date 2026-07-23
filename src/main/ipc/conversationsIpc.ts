@@ -10,6 +10,11 @@ const ConversationsSchema = z.object({
   assistantId: z.string(),
   conversationIds: z.array(z.string()).max(200)
 })
+const RenameSchema = z.object({
+  assistantId: z.string(),
+  conversationId: z.string(),
+  title: z.string().trim().min(1).max(100)
+})
 
 export function registerConversationsIpc(): void {
   ipcMain.handle(IpcChannels.conversationsList, (_event, raw: unknown): ConversationList => {
@@ -32,6 +37,12 @@ export function registerConversationsIpc(): void {
   ipcMain.handle(IpcChannels.conversationsDeleteMany, (_event, raw: unknown): ConversationList => {
     const { assistantId, conversationIds } = ConversationsSchema.parse(raw)
     conversationStore.deleteConversations(assistantId, conversationIds)
+    return conversationStore.list(assistantId)
+  })
+
+  ipcMain.handle(IpcChannels.conversationsRename, (_event, raw: unknown): ConversationList => {
+    const { assistantId, conversationId, title } = RenameSchema.parse(raw)
+    conversationStore.renameConversation(assistantId, conversationId, title)
     return conversationStore.list(assistantId)
   })
 }
