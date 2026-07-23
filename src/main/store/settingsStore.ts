@@ -10,7 +10,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   chatWindowOpacity: 1,
   launchAtStartup: false,
   theme: 'system',
-  autoInstallUpdates: true
+  autoInstallUpdates: true,
+  textZoom: 1
 }
 
 const store = new Store<{ settings: AppSettings }>({
@@ -60,4 +61,12 @@ export function getAutoInstallUpdates(): boolean {
 
 export function setAutoInstallUpdates(enabled: boolean): void {
   store.set('settings', { ...loadSettings(), autoInstallUpdates: enabled })
+}
+
+export function getTextZoom(): number {
+  return loadSettings().textZoom
+}
+
+export function setTextZoom(factor: number): void {
+  store.set('settings', { ...loadSettings(), textZoom: factor })
 }

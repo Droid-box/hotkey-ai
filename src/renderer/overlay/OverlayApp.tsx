@@ -144,7 +144,9 @@ export function OverlayApp() {
   const [renameDraft, setRenameDraft] = useState('')
 
   const assistantIdRef = useRef<string | null>(null)
-  const appliedZoomRef = useRef(1)
+  const zoomRef = useRef(1)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const menuTriggerRef = useRef<HTMLElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const messagesListRef = useRef<HTMLDivElement>(null)
@@ -166,6 +168,10 @@ export function OverlayApp() {
         setMenuOpenId(null)
         setRenamingId(null)
         setStreaming(false)
+        // Apply the saved app-wide zoom (set in Settings or the other window).
+        zoomRef.current = payload.zoom
+        window.hotkeyAI.applyZoom(payload.zoom)
+        setZoom(payload.zoom)
         // Prefill with the clipboard when the assistant opts in; otherwise
         // start empty.
         setDraft(payload.prefill ?? '')
@@ -220,17 +226,17 @@ export function OverlayApp() {
       if (e.ctrlKey && !e.altKey && !e.metaKey) {
         if (e.key === '=' || e.key === '+') {
           e.preventDefault()
-          setZoom((z) => clampZoom(z + ZOOM_STEP))
+          changeZoom(zoomRef.current + ZOOM_STEP)
           return
         }
         if (e.key === '-' || e.key === '_') {
           e.preventDefault()
-          setZoom((z) => clampZoom(z - ZOOM_STEP))
+          changeZoom(zoomRef.current - ZOOM_STEP)
           return
         }
         if (e.key === '0') {
           e.preventDefault()
-          setZoom(1)
+          changeZoom(1)
           return
         }
       }
@@ -238,7 +244,7 @@ export function OverlayApp() {
         // Unwind the most nested UI first. The rename input handles its own
         // Escape (stopPropagation); here we close an open menu, else the overlay.
         if (menuOpenId) {
-          setMenuOpenId(null)
+          closeMenu()
           return
         }
         if (assistantIdRef.current) window.hotkeyAI.abort(assistantIdRef.current)
@@ -257,12 +263,8 @@ export function OverlayApp() {
   // history sidebar is open the main process pins a fixed browse height and
   // ignores this; on close it reverts to the measured compact size.
   useLayoutEffect(() => {
-    // Apply the zoom factor before measuring, so offsetHeight reflects the
-    // zoomed (reflowed) layout. Guarded so the bridge is only called on change.
-    if (appliedZoomRef.current !== zoom) {
-      window.hotkeyAI.setZoom(zoom)
-      appliedZoomRef.current = zoom
-    }
+    // Zoom is already applied to the frame (in changeZoom / on configure) before
+    // this runs, so offsetHeight reflects the zoomed, reflowed layout.
     const headerHeight = headerRef.current?.offsetHeight ?? 0
     const inputHeight = inputAreaRef.current?.offsetHeight ?? 0
     // Measure the inner list's NATURAL height, not the scroll container — the
@@ -308,6 +310,16 @@ export function OverlayApp() {
     const next = !pinned
     setPinned(next)
     window.hotkeyAI.setPinned(next)
+  }
+
+  // Text zoom: apply to this frame immediately (so the resize measures the
+  // zoomed layout) and persist app-wide so the other window / next launch match.
+  function changeZoom(next: number): void {
+    const n = clampZoom(next)
+    zoomRef.current = n
+    window.hotkeyAI.applyZoom(n)
+    window.hotkeyAI.persistZoom(n)
+    setZoom(n)
   }
 
   function toggleHistory(): void {
@@ -377,12 +389,20 @@ export function OverlayApp() {
   // isn't clipped by the history list's overflow).
   function openMenu(e: ReactMouseEvent, conversationId: string): void {
     e.stopPropagation()
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const trigger = e.currentTarget as HTMLElement
+    const rect = trigger.getBoundingClientRect()
     const left = Math.max(6, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 6))
     // Open below the button, or above it if there isn't room.
     const top = rect.bottom + 84 > window.innerHeight ? rect.top - 84 : rect.bottom + 4
+    menuTriggerRef.current = trigger
     setMenuPos({ top, left })
     setMenuOpenId((prev) => (prev === conversationId ? null : conversationId))
+  }
+
+  // Close the menu and return focus to the button that opened it (keyboard).
+  function closeMenu(): void {
+    setMenuOpenId(null)
+    menuTriggerRef.current?.focus()
   }
 
   function startRename(conversationId: string): void {
@@ -408,6 +428,9 @@ export function OverlayApp() {
   // the opening click doesn't immediately dismiss it).
   useEffect(() => {
     if (!menuOpenId) return
+    // Move focus into the menu so it's operable by keyboard.
+    const first = menuRef.current?.querySelector('.history-menu-item')
+    if (first instanceof HTMLElement) first.focus()
     function onDocClick(e: MouseEvent): void {
       if (!(e.target as HTMLElement).closest('.history-menu')) setMenuOpenId(null)
     }
@@ -491,6 +514,14 @@ export function OverlayApp() {
                         if (renaming) return
                         if (selectMode) toggleSelected(c.id)
                         else void openThread(c.id)
+                      }}
+                      onKeyDown={(e) => {
+                        if (renaming) return
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          if (selectMode) toggleSelected(c.id)
+                          else void openThread(c.id)
+                        }
                       }}
                       role="button"
                       tabIndex={0}
@@ -656,6 +687,23 @@ export function OverlayApp() {
           <div
             className="history-menu"
             role="menu"
+            ref={menuRef}
+            onKeyDown={(e) => {
+              const items = menuRef.current
+                ? [...menuRef.current.querySelectorAll<HTMLElement>('.history-menu-item')]
+                : []
+              const idx = items.indexOf(document.activeElement as HTMLElement)
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                items[(idx + 1) % items.length]?.focus()
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                items[(idx - 1 + items.length) % items.length]?.focus()
+              } else if (e.key === 'Escape') {
+                e.stopPropagation()
+                closeMenu()
+              }
+            }}
             style={{ top: menuPos.top, left: menuPos.left, width: MENU_WIDTH }}
           >
             <button

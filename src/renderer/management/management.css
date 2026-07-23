@@ -82,7 +82,10 @@ body {
   display: flex;
   align-items: center;
   height: 36px;
-  padding-left: 14px;
+  /* Left inset matches the logo's vertical gap ((36 − 18) / 2 ≈ 9px) so the
+     spacing from the left and top edges reads balanced. Constant in CSS, so it
+     stays the same whether the window is normal or maximized. */
+  padding-left: 9px;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   -webkit-app-region: drag;
@@ -92,6 +95,7 @@ body {
 .titlebar-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .titlebar-controls {

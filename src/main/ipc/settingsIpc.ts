@@ -9,6 +9,7 @@ import {
   setChatWindowOpacity,
   setChatWindowSize,
   setLaunchAtStartup,
+  setTextZoom,
   setTheme
 } from '../store/settingsStore'
 import { overlayWindowManager } from '../windows/overlayWindow'
@@ -54,5 +55,14 @@ export function registerSettingsIpc(): void {
     const enabled = z.boolean().parse(rawEnabled)
     setAutoInstallUpdates(enabled)
     setUpdateAutoDownload(enabled)
+  })
+
+  // Fire-and-forget: a renderer changed the text zoom (Ctrl +/-/0). Persist it
+  // (clamped, never throwing) so every window and the next launch match. Each
+  // renderer applies webFrame zoom itself and reads this value on open.
+  ipcMain.on(IpcChannels.appSetZoom, (_event, raw: unknown): void => {
+    const parsed = z.number().finite().safeParse(raw)
+    if (!parsed.success) return
+    setTextZoom(Math.min(2.5, Math.max(0.8, parsed.data)))
   })
 }

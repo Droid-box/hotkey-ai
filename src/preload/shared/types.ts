@@ -16,6 +16,8 @@ export interface AppSettings {
   theme: ThemeSetting
   /** Download updates automatically in the background (install on restart). */
   autoInstallUpdates: boolean
+  /** App-wide text zoom factor (Ctrl +/-/0). 1 = 100%. */
+  textZoom: number
 }
 
 /**
@@ -144,6 +146,10 @@ export interface ManagementBridge {
   }
   /** Copy text to the clipboard (message/code copy buttons). */
   copyText: (text: string) => void
+  /** Apply a text zoom factor to this window (webFrame; no persistence). */
+  applyZoom: (factor: number) => void
+  /** Persist the app-wide text zoom factor so it's shared across windows/restarts. */
+  persistZoom: (factor: number) => void
   settings: {
     get: () => Promise<AppSettings>
     setChatWindowSize: (size: ChatWindowSize) => Promise<void>
@@ -204,6 +210,8 @@ export interface OverlayConfigurePayload {
   conversations: ConversationMeta[]
   /** The thread currently shown (null when it's a fresh, empty one). */
   activeConversationId: string | null
+  /** Saved app-wide text zoom factor to apply on this summon. */
+  zoom: number
 }
 
 export interface ChatStreamChunk {
@@ -239,8 +247,10 @@ export interface OverlayBridge {
   openApiKeys: () => void
   /** Toggle the history sidebar — main widens/resizes the window accordingly. */
   setHistoryOpen: (open: boolean) => void
-  /** Set the overlay's text zoom factor (1 = 100%). Renderer-only (webFrame). */
-  setZoom: (factor: number) => void
+  /** Apply a text zoom factor to this window (webFrame; no persistence). */
+  applyZoom: (factor: number) => void
+  /** Persist the app-wide text zoom factor so it's shared across windows/restarts. */
+  persistZoom: (factor: number) => void
   /** Conversation history (threads) for the history sidebar. */
   conversations: {
     list: (assistantId: string) => Promise<ConversationList>

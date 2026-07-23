@@ -50,6 +50,9 @@ export const IpcChannels = {
   conversationsRename: 'conversations:rename',
   conversationsChanged: 'conversations:changed',
 
+  // App-wide text zoom (persisted so it's consistent across windows/restarts).
+  appSetZoom: 'app:set-zoom',
+
   managementNavigate: 'management:navigate',
 
   chatSend: 'chat:send',

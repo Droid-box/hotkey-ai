@@ -1,4 +1,4 @@
-import { clipboard, contextBridge, ipcRenderer } from 'electron'
+import { clipboard, contextBridge, ipcRenderer, webFrame } from 'electron'
 import { IpcChannels } from './shared/ipcChannels'
 import type {
   ApiKeyInfo,
@@ -86,6 +86,13 @@ const bridge: ManagementBridge = {
     onStreamError: subscribe<ChatStreamError>(IpcChannels.testChatStreamError)
   },
   copyText: (text: string): void => clipboard.writeText(text),
+  // App-wide text zoom (Ctrl +/-/0), shared with the overlay via settings.
+  applyZoom: (factor: number): void => {
+    webFrame.setZoomFactor(factor)
+  },
+  persistZoom: (factor: number): void => {
+    ipcRenderer.send(IpcChannels.appSetZoom, factor)
+  },
   settings: {
     get: (): Promise<AppSettings> => ipcRenderer.invoke(IpcChannels.settingsGet),
     setChatWindowSize: (size: ChatWindowSize): Promise<void> =>

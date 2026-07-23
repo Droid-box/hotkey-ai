@@ -4,9 +4,12 @@
 
 /* Same consistent gray focus ring as the management window, tuned for the
    dark glass overlay. Keyboard-only via :focus-visible. */
+/* Inset ring so keyboard focus stays visible even for elements inside the
+   scroll/overflow containers (history list, chat) that would clip an outset
+   ring. Drawn inside the element's box, following its border-radius. */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
+  box-shadow: inset 0 0 0 2px var(--ring);
 }
 
 :focus:not(:focus-visible) {

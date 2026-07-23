@@ -35,11 +35,14 @@ const bridge: OverlayBridge = {
   setHistoryOpen: (open: boolean): void => {
     ipcRenderer.send(IpcChannels.overlaySetHistoryOpen, open)
   },
-  // Text zoom (Ctrl +/-/0). Handled entirely in the renderer frame — no main
-  // round-trip. Scales the whole overlay like browser zoom; the renderer feeds
-  // the factor back into resizeContent so the window still fits.
-  setZoom: (factor: number): void => {
+  // Text zoom (Ctrl +/-/0). applyZoom scales this frame like browser zoom; the
+  // renderer feeds the factor back into resizeContent so the window still fits.
+  // persistZoom saves it app-wide so every window and the next launch match.
+  applyZoom: (factor: number): void => {
     webFrame.setZoomFactor(factor)
+  },
+  persistZoom: (factor: number): void => {
+    ipcRenderer.send(IpcChannels.appSetZoom, factor)
   },
   conversations: {
     list: (assistantId: string): Promise<ConversationList> =>

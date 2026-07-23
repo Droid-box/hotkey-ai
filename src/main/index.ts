@@ -15,7 +15,7 @@ import { registerSettingsIpc } from './ipc/settingsIpc'
 import { registerWindowControlsIpc } from './ipc/windowControlsIpc'
 import { initUpdater, registerUpdatesIpc } from './updater'
 import { assistantStore } from './store/assistantStore'
-import { getLaunchAtStartup, getTheme } from './store/settingsStore'
+import { getLaunchAtStartup, getTextZoom, getTheme } from './store/settingsStore'
 import { applyLaunchAtStartup, wasLaunchedAtStartup } from './lib/loginItem'
 import { applyThemeSource } from './lib/theme'
 import { shortcutManager } from './shortcuts/shortcutManager'
@@ -54,6 +54,7 @@ function openAssistantOverlay(assistantId: string): void {
     history: conversationStore.getActiveMessages(assistant.id),
     conversations: conversations.conversations,
     activeConversationId: conversations.activeId,
+    zoom: getTextZoom(),
     // Stage the clipboard in the input when the assistant opts in, so its
     // hotkey acts on whatever the user just copied.
     prefill: assistant.prefillClipboard ? clipboard.readText() : undefined
@@ -151,7 +152,8 @@ if (!gotSingleInstanceLock) {
       // the exact code path a global shortcut press takes.
       ;(globalThis as Record<string, unknown>)['__hotkeyDebug'] = {
         openAssistantOverlay,
-        conversationStore
+        conversationStore,
+        openManagement: () => managementWindowManager.showOrCreate()
       }
     }
   })

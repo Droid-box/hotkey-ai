@@ -11,6 +11,10 @@ export const ChatWindowOpacitySchema = z.number().min(0.5).max(1)
 
 export const ThemeSchema = z.enum(['system', 'dark', 'light'])
 
+// App-wide text zoom factor (Ctrl +/-/0). Kept in sync with the renderer's
+// ZOOM_MIN/ZOOM_MAX; validated loosely and clamped so a stray value can't throw.
+export const TextZoomSchema = z.number().min(0.8).max(2.5)
+
 // Constrained against the shared Assistant type so this validator and the
 // renderer-facing type in preload/shared/types.ts can't silently drift.
 export const AssistantSchema = z.object({

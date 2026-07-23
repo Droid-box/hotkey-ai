@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Assistant, AssistantInput } from '../../preload/shared/types'
+
+// App-wide text zoom bounds (kept in sync with the overlay + main clamp).
+const ZOOM_MIN = 0.8
+const ZOOM_MAX = 2.5
+const ZOOM_STEP = 0.1
+const clampZoom = (z: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 10) / 10))
 import { AssistantListPage } from './AssistantListPage'
 import { AssistantEditPage } from './AssistantEditPage'
 import { ApiKeysPage } from './ApiKeysPage'
@@ -18,6 +24,7 @@ export function ManagementApp() {
   const [view, setView] = useState<View>({ type: 'list' })
   const [maximized, setMaximized] = useState(false)
   const [shortcutFailures, setShortcutFailures] = useState<string[]>([])
+  const zoomRef = useRef(1)
 
   const refresh = useCallback(() => {
     window.hotkeyAI.assistants.list().then(setAssistants)
@@ -29,6 +36,36 @@ export function ManagementApp() {
   }, [refresh])
 
   useEffect(() => window.hotkeyAI.windowControls.onMaximizedChanged(setMaximized), [])
+
+  // App-wide text zoom (Ctrl +/-/0). Apply the saved factor on open, then
+  // handle the shortcuts — applying to this window and persisting app-wide.
+  useEffect(() => {
+    window.hotkeyAI.settings.get().then((s) => {
+      zoomRef.current = s.textZoom
+      window.hotkeyAI.applyZoom(s.textZoom)
+    })
+    function changeZoom(next: number): void {
+      const n = clampZoom(next)
+      zoomRef.current = n
+      window.hotkeyAI.applyZoom(n)
+      window.hotkeyAI.persistZoom(n)
+    }
+    function onKeyDown(e: KeyboardEvent): void {
+      if (!e.ctrlKey || e.altKey || e.metaKey) return
+      if (e.key === '=' || e.key === '+') {
+        e.preventDefault()
+        changeZoom(zoomRef.current + ZOOM_STEP)
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        changeZoom(zoomRef.current - ZOOM_STEP)
+      } else if (e.key === '0') {
+        e.preventDefault()
+        changeZoom(1)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   // Track which assistants' shortcuts the OS refused, so the list can flag them.
   useEffect(() => {
